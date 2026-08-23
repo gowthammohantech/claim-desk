@@ -1,0 +1,821 @@
+openapi: 3.1.0
+info:
+  title: Claim Desk API
+  version: 1.0.0
+  description: Contract baseline for Claim Desk mobile and Finance/Admin web.
+servers:
+- url: https://api.claimdesk.example.com/v1
+security:
+- bearerAuth: []
+tags:
+- name: Auth
+- name: Profile
+- name: Expenses
+- name: Receipts
+- name: Claims
+- name: Approvals
+- name: Finance
+- name: Payments
+- name: Notifications
+- name: Admin
+paths:
+  /auth/otp/request:
+    post:
+      tags:
+      - Auth
+      operationId: requestOtp
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - mobileNumber
+              properties:
+                mobileNumber:
+                  type: string
+      responses:
+        '202':
+          description: OTP generated/sent using dummy OTP adapter
+  /auth/otp/verify:
+    post:
+      tags:
+      - Auth
+      operationId: verifyOtp
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - mobileNumber
+              - otp
+              properties:
+                mobileNumber:
+                  type: string
+                otp:
+                  type: string
+      responses:
+        '200':
+          description: Authenticated
+  /me:
+    get:
+      tags:
+      - Profile
+      operationId: getMe
+      responses:
+        '200':
+          description: Current employee
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Employee'
+  /me/engagements:
+    get:
+      tags:
+      - Profile
+      operationId: listMyEngagements
+      responses:
+        '200':
+          description: Assigned open engagements
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Engagement'
+  /expenses:
+    get:
+      tags:
+      - Expenses
+      operationId: listExpenses
+      parameters:
+      - in: query
+        name: state
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Expense list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Expense'
+    post:
+      tags:
+      - Expenses
+      operationId: createExpense
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExpenseInput'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Expense'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /expenses/{expenseId}:
+    get:
+      tags:
+      - Expenses
+      operationId: getExpense
+      parameters:
+      - $ref: '#/components/parameters/ExpenseId'
+      responses:
+        '200':
+          description: Expense
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Expense'
+    patch:
+      tags:
+      - Expenses
+      operationId: updateExpense
+      parameters:
+      - $ref: '#/components/parameters/ExpenseId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExpenseInput'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Expense'
+        '409':
+          $ref: '#/components/responses/Conflict'
+    delete:
+      tags:
+      - Expenses
+      operationId: deleteDraftExpense
+      parameters:
+      - $ref: '#/components/parameters/ExpenseId'
+      responses:
+        '204':
+          description: Draft removed
+  /expenses/{expenseId}/evaluate:
+    post:
+      tags:
+      - Expenses
+      operationId: evaluateExpense
+      parameters:
+      - $ref: '#/components/parameters/ExpenseId'
+      responses:
+        '200':
+          description: Policy evaluation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PolicyEvaluation'
+  /expenses/{expenseId}/duplicate-resolution:
+    post:
+      tags:
+      - Expenses
+      operationId: resolveDuplicate
+      parameters:
+      - $ref: '#/components/parameters/ExpenseId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - action
+              properties:
+                action:
+                  enum:
+                  - DISCARD
+                  - KEEP
+                candidateExpenseId:
+                  type: string
+                reason:
+                  type: string
+      responses:
+        '200':
+          description: Resolved
+  /receipts/upload-intent:
+    post:
+      tags:
+      - Receipts
+      operationId: createReceiptUploadIntent
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - fileName
+              - mimeType
+              - sizeBytes
+              properties:
+                fileName:
+                  type: string
+                mimeType:
+                  type: string
+                sizeBytes:
+                  type: integer
+      responses:
+        '200':
+          description: Short-lived upload details
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  receiptId:
+                    type: string
+                  uploadUrl:
+                    type: string
+                    format: uri
+                  expiresAt:
+                    type: string
+                    format: date-time
+  /receipts/{receiptId}/complete:
+    post:
+      tags:
+      - Receipts
+      operationId: completeReceiptUpload
+      parameters:
+      - in: path
+        name: receiptId
+        required: true
+        schema:
+          type: string
+      responses:
+        '202':
+          description: Upload accepted; OCR may be queued
+  /claims:
+    get:
+      tags:
+      - Claims
+      operationId: listClaims
+      responses:
+        '200':
+          description: Claims
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Claim'
+    post:
+      tags:
+      - Claims
+      operationId: createClaim
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - title
+              - expenseIds
+              properties:
+                title:
+                  type: string
+                expenseIds:
+                  type: array
+                  items:
+                    type: string
+                  minItems: 1
+      responses:
+        '201':
+          description: Draft claim
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Claim'
+  /claims/{claimId}:
+    get:
+      tags:
+      - Claims
+      operationId: getClaim
+      parameters:
+      - $ref: '#/components/parameters/ClaimId'
+      responses:
+        '200':
+          description: Claim
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Claim'
+  /claims/{claimId}/submit:
+    post:
+      tags:
+      - Claims
+      operationId: submitClaim
+      parameters:
+      - $ref: '#/components/parameters/ClaimId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - declarationAccepted
+              properties:
+                declarationAccepted:
+                  const: true
+      responses:
+        '200':
+          description: Submitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Claim'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /claims/{claimId}/resubmit:
+    post:
+      tags:
+      - Claims
+      operationId: resubmitClaim
+      parameters:
+      - $ref: '#/components/parameters/ClaimId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Resubmitted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Claim'
+  /approvals:
+    get:
+      tags:
+      - Approvals
+      operationId: listAssignedApprovals
+      responses:
+        '200':
+          description: Assigned tasks
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ApprovalTask'
+  /approvals/{taskId}/decision:
+    post:
+      tags:
+      - Approvals
+      operationId: decideApproval
+      parameters:
+      - in: path
+        name: taskId
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - decision
+              - version
+              properties:
+                decision:
+                  enum:
+                  - APPROVE
+                  - RETURN
+                  - REJECT
+                reason:
+                  type: string
+                version:
+                  type: integer
+      responses:
+        '200':
+          description: Decision accepted
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /finance/claims:
+    get:
+      tags:
+      - Finance
+      operationId: listFinanceQueue
+      responses:
+        '200':
+          description: Finance queue
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Claim'
+  /finance/claims/{claimId}/verify:
+    post:
+      tags:
+      - Finance
+      operationId: verifyClaim
+      parameters:
+      - $ref: '#/components/parameters/ClaimId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Verified
+  /finance/claims/{claimId}/return:
+    post:
+      tags:
+      - Finance
+      operationId: returnClaimFromFinance
+      parameters:
+      - $ref: '#/components/parameters/ClaimId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - reason
+              properties:
+                reason:
+                  type: string
+                  minLength: 1
+      responses:
+        '200':
+          description: Returned
+  /payment-batches:
+    post:
+      tags:
+      - Payments
+      operationId: createPaymentBatch
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - claimIds
+              properties:
+                claimIds:
+                  type: array
+                  items:
+                    type: string
+                  minItems: 1
+                paymentMethod:
+                  type: string
+      responses:
+        '201':
+          description: Batch created
+  /payments/{paymentId}/paid:
+    post:
+      tags:
+      - Payments
+      operationId: markPaymentPaid
+      parameters:
+      - in: path
+        name: paymentId
+        required: true
+        schema:
+          type: string
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - reference
+              - paidAt
+              properties:
+                reference:
+                  type: string
+                paidAt:
+                  type: string
+                  format: date-time
+      responses:
+        '200':
+          description: Paid
+  /notifications:
+    get:
+      tags:
+      - Notifications
+      operationId: listNotifications
+      responses:
+        '200':
+          description: Notifications
+  /notifications/{notificationId}/read:
+    post:
+      tags:
+      - Notifications
+      operationId: markNotificationRead
+      parameters:
+      - in: path
+        name: notificationId
+        required: true
+        schema:
+          type: string
+      responses:
+        '204':
+          description: Read
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    IdempotencyKey:
+      in: header
+      name: Idempotency-Key
+      required: true
+      schema:
+        type: string
+        minLength: 8
+    ExpenseId:
+      in: path
+      name: expenseId
+      required: true
+      schema:
+        type: string
+    ClaimId:
+      in: path
+      name: claimId
+      required: true
+      schema:
+        type: string
+  responses:
+    Conflict:
+      description: State/version conflict
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    ValidationError:
+      description: Business validation failed
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+  schemas:
+    Employee:
+      type: object
+      required:
+      - id
+      - employeeCode
+      - name
+      - mobileNumber
+      - status
+      properties:
+        id:
+          type: string
+        employeeCode:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        status:
+          type: string
+        grade:
+          type: string
+        department:
+          type: string
+        branch:
+          type: string
+        managerEmployeeId:
+          type: string
+        roles:
+          type: array
+          items:
+            type: string
+        mobileNumber:
+          type: string
+    Engagement:
+      type: object
+      properties:
+        id:
+          type: string
+        code:
+          type: string
+        clientId:
+          type: string
+        clientName:
+          type: string
+        name:
+          type: string
+        status:
+          enum:
+          - OPEN
+          - CLOSED
+    ExpenseInput:
+      type: object
+      required:
+      - expenseDate
+      - categoryId
+      - amountPaise
+      - currency
+      - classification
+      - businessPurpose
+      properties:
+        captureMode:
+          enum:
+          - SCAN
+          - MANUAL
+          - MILEAGE
+        merchant:
+          type: string
+        expenseDate:
+          type: string
+          format: date
+        categoryId:
+          type: string
+        amountPaise:
+          type: integer
+          minimum: 1
+        currency:
+          type: string
+          enum:
+          - INR
+        classification:
+          enum:
+          - CLIENT_BILLABLE
+          - CLIENT_NON_BILLABLE
+          - INTERNAL
+        clientId:
+          type: string
+        engagementId:
+          type: string
+        businessPurpose:
+          type: string
+        receiptIds:
+          type: array
+          items:
+            type: string
+        exceptionJustification:
+          type: string
+        mileage:
+          $ref: '#/components/schemas/Mileage'
+    Mileage:
+      type: object
+      properties:
+        origin:
+          type: string
+        destination:
+          type: string
+        distanceKm:
+          type: number
+          minimum: 0
+        ratePaisePerKm:
+          type: integer
+          minimum: 0
+    Expense:
+      allOf:
+      - $ref: '#/components/schemas/ExpenseInput'
+      - type: object
+        required:
+        - id
+        - expenseNo
+        - state
+        - version
+        properties:
+          id:
+            type: string
+          expenseNo:
+            type: string
+          state:
+            enum:
+            - DRAFT
+            - UNCLAIMED
+            - IN_CLAIM
+            - SUBMITTED
+          policyOutcome:
+            enum:
+            - PASS
+            - WARNING
+            - EXCEPTION_REQUIRES_JUSTIFICATION
+            - BLOCKED
+          version:
+            type: integer
+    PolicyEvaluation:
+      type: object
+      properties:
+        overallOutcome:
+          enum:
+          - PASS
+          - WARNING
+          - EXCEPTION_REQUIRES_JUSTIFICATION
+          - BLOCKED
+        results:
+          type: array
+          items:
+            type: object
+    Claim:
+      type: object
+      required:
+      - id
+      - claimNo
+      - employeeId
+      - expenseIds
+      - totalPaise
+      - status
+      - version
+      properties:
+        id:
+          type: string
+        claimNo:
+          type: string
+        employeeId:
+          type: string
+        title:
+          type: string
+        expenseIds:
+          type: array
+          items:
+            type: string
+        totalPaise:
+          type: integer
+        currency:
+          type: string
+          enum:
+          - INR
+        status:
+          enum:
+          - DRAFT
+          - SUBMITTED
+          - IN_APPROVAL
+          - RETURNED
+          - REJECTED
+          - APPROVED
+          - FINANCE_REVIEW
+          - VERIFIED
+          - PAYMENT_PROCESSING
+          - PAID
+          - CANCELLED
+        currentStageIndex:
+          type: integer
+        version:
+          type: integer
+    ApprovalTask:
+      type: object
+      properties:
+        id:
+          type: string
+        claimId:
+          type: string
+        stageCode:
+          type: string
+        assignedApproverId:
+          type: string
+        status:
+          enum:
+          - PENDING
+          - APPROVED
+          - RETURNED
+          - REJECTED
+          - CANCELLED
+        dueAt:
+          type: string
+          format: date-time
+        version:
+          type: integer
+    Error:
+      type: object
+      required:
+      - code
+      - message
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        correlationId:
+          type: string
+        details:
+          type: array
+          items:
+            type: object

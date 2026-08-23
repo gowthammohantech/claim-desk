@@ -1,0 +1,1352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ClaimDesk · Employee expense app</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ══════════════════════════════════════════════════════════════════
+   CLAIMDESK DESIGN SYSTEM · v2.0 — "Clear Ledger"
+   Direction: light fintech. Cool-gray canvas, white cards with soft
+   layered shadows, royal-blue gradient hero, pill buttons and pill
+   segments, tinted smart-check (AI insight) cards, circular avatars.
+   ══════════════════════════════════════════════════════════════════ */
+:root{
+  /* ── Color · surfaces + ink ───────────────────── */
+  --paper:        #F2F4F8;   /* app background                 */
+  --paper-raised: #FFFFFF;   /* cards, sheets                  */
+  --paper-sunken: #F5F7FA;   /* wells, tracks, disabled fills  */
+  --ink:          #101828;
+  --ink-70: rgba(16,24,40,.72);
+  --ink-55: #667085;
+  --ink-40: #98A2B3;
+  --ink-25: #C6CEDA;
+  --line:      #EAECF2;      /* hairline dividers   */
+  --line-mid:  #D5DBE4;      /* input borders       */
+
+  /* ── Color · brand + semantic ─────────────────── */
+  --accent:      #2D5FF0;    /* royal blue · primary           */
+  --accent-deep: #1E4AD1;
+  --accent-tint: #EBF0FE;
+  --accent-grad: linear-gradient(135deg,#4B7BF7 0%,#2D5FF0 55%,#2049CE 100%);
+  --on-accent:   #FFFFFF;
+  --ok:      #12A150;  --ok-tint:    #E7F6EE;
+  --warn:    #B25E09;  --warn-tint:  #FCF2E3;
+  --danger:  #DE4444;  --danger-tint:#FDEDED;
+  --violet:  #7A5AF8;  --violet-tint:#F1EEFE;   /* smart-check accent */
+  --focus-ring: #2D5FF0;
+
+  /* ── Type ─────────────────────────────────────── */
+  --font-ui:      'Inter', -apple-system, 'Segoe UI', system-ui, sans-serif;
+  --font-display: var(--font-ui);
+  --fs-micro: 10.5px;
+  --fs-caption: 11.5px;
+  --fs-body-s: 13px;
+  --fs-body: 14.5px;
+  --fs-title: 17px;
+  --fs-h2: 21px;
+  --fs-h1: 26px;
+  --fs-num-l: 38px;
+  --track-caps: .07em;
+
+  /* ── Space (4pt) · radius · borders ───────────── */
+  --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px;
+  --sp-5: 20px; --sp-6: 24px; --sp-7: 32px;
+  --r: 14px;            /* generic surface radius (inline uses) */
+  --r-card: 18px;
+  --r-input: 12px;
+  --r-pill: 999px;
+  --r-sheet: 24px;
+  --hairline: 1px solid var(--line);
+
+  /* ── Elevation · motion ───────────────────────── */
+  --shadow-raised: 0 1px 2px rgba(16,24,40,.04), 0 6px 20px rgba(16,24,40,.06);
+  --shadow-pop:    0 4px 10px rgba(16,24,40,.08), 0 16px 40px rgba(16,24,40,.12);
+  --shadow-sheet:  0 -12px 40px rgba(16,24,40,.18);
+  --ease: cubic-bezier(.32,.72,.24,1);
+  --t-fast: 140ms; --t-med: 220ms; --t-sheet: 300ms;
+
+  /* ── Layout ───────────────────────────────────── */
+  --tabbar-h: 64px;
+  --touch: 44px;
+}
+
+/* ── Reset + page stage ─────────────────────────── */
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{
+  background:#E7EAF0;
+  font-family:var(--font-ui); color:var(--ink);
+  display:flex; align-items:center; justify-content:center;
+  min-height:100vh; padding:28px 16px;
+  -webkit-font-smoothing:antialiased;
+}
+button{font-family:inherit;color:inherit;background:none;border:0;cursor:pointer}
+input,textarea,select{font-family:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--focus-ring);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+
+/* ── Stage header + device shell ────────────────── */
+.stage{display:flex;flex-direction:column;align-items:center;gap:18px}
+.stage-head{width:min(402px,100%);display:flex;align-items:baseline;justify-content:space-between}
+.wordmark{font-weight:800;font-size:21px;letter-spacing:-.03em}
+.wordmark::first-letter{color:var(--accent)}
+.stage-sub{font-size:var(--fs-micro);letter-spacing:var(--track-caps);text-transform:uppercase;color:var(--ink-55);font-weight:600}
+.device{
+  width:402px;height:min(874px,calc(100vh - 118px));min-height:640px;
+  background:var(--paper);
+  border-radius:44px;
+  box-shadow:0 30px 70px rgba(16,24,40,.20), inset 0 0 0 10px #FFFFFF, inset 0 0 0 11px #E3E7EE;
+  overflow:hidden; position:relative; display:flex; flex-direction:column;
+  padding:10px;
+}
+.device>*{border-radius:0}
+@media (max-width:460px){
+  body{padding:0;background:var(--paper)}
+  .stage{gap:0;width:100%;height:100%}
+  .stage-head,.stage-foot{display:none}
+  .device{width:100%;height:100vh;height:100dvh;min-height:0;border-radius:0;box-shadow:none;padding:0}
+}
+.statusbar{
+  height:44px;flex:none;display:flex;align-items:flex-end;justify-content:space-between;
+  padding:0 22px 6px;font-size:13.5px;font-weight:600;letter-spacing:-.01em;
+}
+.statusbar svg{display:block}
+.home-indicator{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);width:118px;height:4px;border-radius:2px;background:var(--ink);opacity:.85;pointer-events:none;z-index:60}
+@media (max-width:460px){.home-indicator{bottom:7px}}
+.stage-foot{width:min(402px,100%);font-size:12px;line-height:1.55;color:var(--ink-55)}
+.stage-foot b{color:var(--ink);font-weight:600}
+
+/* ── App scaffold ───────────────────────────────── */
+.app{flex:1;display:flex;flex-direction:column;min-height:0;position:relative;font-size:var(--fs-body);line-height:1.5}
+.screen{flex:1;display:flex;flex-direction:column;min-height:0;animation:screenIn var(--t-med) var(--ease)}
+@keyframes screenIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior:contain}
+.scroll::-webkit-scrollbar{display:none}
+
+/* ── Legacy crosshair marks: retired in v2 ──────── */
+i.rg{display:none}
+
+/* ── Type utilities ─────────────────────────────── */
+.eyebrow{font-size:var(--fs-micro);letter-spacing:var(--track-caps);text-transform:uppercase;color:var(--ink-55);font-weight:600}
+.display{font-weight:700;letter-spacing:-.025em;line-height:1.12}
+.num{font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.025em}
+.cap{font-size:var(--fs-caption);color:var(--ink-55)}
+.body-s{font-size:var(--fs-body-s)}
+
+/* ── App bar ────────────────────────────────────── */
+.appbar{flex:none;display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-2) var(--sp-4) var(--sp-3);min-height:56px}
+.appbar .titles{flex:1;min-width:0}
+.appbar .titles .eyebrow{margin-bottom:1px}
+.appbar h1{font-weight:700;font-size:var(--fs-h2);letter-spacing:-.02em;line-height:1.1}
+.iconbtn{width:42px;height:42px;min-width:42px;display:flex;align-items:center;justify-content:center;background:var(--paper-raised);border:var(--hairline);border-radius:50%;box-shadow:0 1px 2px rgba(16,24,40,.05);transition:background var(--t-fast),transform var(--t-fast)}
+.iconbtn:active{background:var(--paper-sunken);transform:scale(.95)}
+.iconbtn.plain{background:transparent;border-color:transparent;box-shadow:none}
+.badge-dot{position:absolute;top:8px;right:9px;width:8px;height:8px;background:var(--accent);border:2px solid var(--paper-raised);border-radius:50%}
+
+/* ── Buttons ────────────────────────────────────── */
+.btn{
+  display:flex;align-items:center;justify-content:center;gap:var(--sp-2);
+  min-height:48px;padding:0 var(--sp-5);border-radius:var(--r-pill);
+  font-size:var(--fs-body);font-weight:600;letter-spacing:-.01em;
+  transition:background var(--t-fast),color var(--t-fast),border-color var(--t-fast),
+             box-shadow var(--t-fast),transform var(--t-fast);
+  user-select:none;
+}
+.btn:active:not(:disabled){transform:scale(.98)}
+.btn-primary{background:var(--accent);color:var(--on-accent);box-shadow:0 6px 16px rgba(45,95,240,.28)}
+.btn-primary:active{background:var(--accent-deep)}
+.btn-primary:disabled{background:var(--ink-25);box-shadow:none;cursor:not-allowed}
+.btn-secondary{background:var(--paper-raised);border:1px solid var(--line-mid);box-shadow:0 1px 2px rgba(16,24,40,.04)}
+.btn-secondary:active{background:var(--paper-sunken)}
+.btn-danger-ghost{background:var(--paper-raised);border:1px solid rgba(222,68,68,.4);color:var(--danger)}
+.btn-danger-ghost:active{background:var(--danger-tint)}
+.btn-block{width:100%}
+
+/* ── Sticky footer CTA ──────────────────────────── */
+.footer{
+  flex:none;padding:var(--sp-3) var(--sp-4) calc(var(--sp-4) + 12px);
+  background:linear-gradient(to top,var(--paper) 74%,rgba(242,244,248,0));
+  display:flex;flex-direction:column;gap:7px;position:relative;z-index:5;
+}
+.footer .hint{text-align:center;font-size:var(--fs-caption);color:var(--ink-55)}
+.footer-row{display:flex;gap:var(--sp-2)}
+.footer-row .btn{flex:1}
+
+/* ── Cards + lists ──────────────────────────────── */
+.card{background:var(--paper-raised);border:var(--hairline);border-radius:var(--r-card);box-shadow:var(--shadow-raised)}
+.card-flat{background:var(--paper-raised);border:var(--hairline);border-radius:var(--r-card)}
+.section-label{font-size:var(--fs-body-s);font-weight:700;letter-spacing:-.01em;color:var(--ink);padding:var(--sp-5) var(--sp-4) var(--sp-2);text-transform:none}
+.list{border-top:0}
+.row{display:flex;align-items:center;gap:var(--sp-3);padding:var(--sp-3) var(--sp-4);border-bottom:var(--hairline)}
+.row .grow{flex:1;min-width:0}
+.row .t{font-weight:600;font-size:var(--fs-body-s);letter-spacing:-.01em}
+.row .amt{font-weight:700;font-size:14.5px;font-variant-numeric:tabular-nums;letter-spacing:-.02em;white-space:nowrap}
+
+/* merchant avatar circle */
+.mav{width:40px;height:40px;min-width:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13.5px;letter-spacing:-.02em;color:#fff}
+
+/* ── Chips + status ─────────────────────────────── */
+.chip{display:inline-flex;align-items:center;gap:5px;font-size:var(--fs-micro);font-weight:700;letter-spacing:.02em;text-transform:none;padding:4px 10px;border-radius:var(--r-pill);border:1px solid transparent;white-space:nowrap}
+.chip-outline{background:var(--paper-raised);border-color:var(--line-mid);color:var(--ink-55)}
+.chip-accent{background:var(--accent-tint);color:var(--accent-deep)}
+.chip-ok{background:var(--ok-tint);color:var(--ok)}
+.chip-warn{background:var(--warn-tint);color:var(--warn)}
+.chip-danger{background:var(--danger-tint);color:var(--danger)}
+.chip-muted{background:var(--paper-sunken);color:var(--ink-55);border-color:var(--line)}
+
+/* ── Callouts / smart-check cards ───────────────── */
+.callout{display:flex;gap:var(--sp-3);padding:var(--sp-3) var(--sp-4);border-radius:var(--r-card);border:var(--hairline);background:var(--paper-raised);font-size:var(--fs-body-s);line-height:1.5;color:var(--ink-70);box-shadow:0 1px 2px rgba(16,24,40,.03)}
+.callout svg{flex:none;margin-top:1px}
+.callout .ct{font-weight:700;color:var(--ink);margin-bottom:1px;letter-spacing:-.01em}
+.callout .ico{width:34px;height:34px;min-width:34px;border-radius:11px;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.callout-warn .ico{background:var(--warn-tint);color:var(--warn)}
+.callout-danger .ico{background:var(--danger-tint);color:var(--danger)}
+.callout-ok .ico{background:var(--ok-tint);color:var(--ok)}
+.callout-info .ico{background:var(--violet-tint);color:var(--violet)}
+.callout-warn svg,.callout-danger svg,.callout-ok svg,.callout-info svg{margin-top:0}
+
+/* ── Forms ──────────────────────────────────────── */
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:var(--fs-caption);color:var(--ink-55);font-weight:600;letter-spacing:0;text-transform:none}
+.field label .conf{color:var(--ok);font-weight:700}
+.input,.selectlike,textarea.input{
+  width:100%;min-height:48px;padding:12px 14px;border:1px solid var(--line-mid);
+  border-radius:var(--r-input);background:var(--paper-raised);font-size:var(--fs-body);
+  transition:border-color var(--t-fast),box-shadow var(--t-fast);
+}
+.input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(45,95,240,.14);outline:none}
+textarea.input{resize:none;line-height:1.5}
+.selectlike{display:flex;align-items:center;justify-content:space-between;gap:var(--sp-2);cursor:pointer;text-align:left}
+select.input{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' stroke='%23667085' stroke-width='1.8' stroke-linecap='round'><path d='M1 1l5 5 5-5'/></svg>");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
+.readonly{background:var(--paper-sunken);color:var(--ink-70);border-color:var(--line)}
+
+/* ── Segmented control (pill track) ─────────────── */
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;background:var(--paper-sunken);border:var(--hairline);border-radius:var(--r-pill);padding:4px;gap:2px}
+.seg button{min-height:36px;font-size:12.5px;font-weight:600;color:var(--ink-55);border-radius:var(--r-pill);transition:background var(--t-fast),color var(--t-fast),box-shadow var(--t-fast)}
+.seg button[aria-pressed="true"]{background:var(--paper-raised);color:var(--ink);box-shadow:0 1px 3px rgba(16,24,40,.10)}
+
+/* ── Checkbox ───────────────────────────────────── */
+.check{width:24px;height:24px;min-width:24px;border:1.5px solid var(--line-mid);border-radius:8px;display:flex;align-items:center;justify-content:center;background:var(--paper-raised);transition:background var(--t-fast),border-color var(--t-fast)}
+.check[aria-checked="true"]{background:var(--accent);border-color:var(--accent)}
+.check svg{opacity:0;transform:scale(.6);transition:opacity var(--t-fast),transform var(--t-fast);color:#fff}
+.check[aria-checked="true"] svg{opacity:1;transform:none}
+.checkline{display:flex;gap:var(--sp-3);align-items:flex-start;cursor:pointer;text-align:left}
+
+/* ── Tab bar ────────────────────────────────────── */
+.tabbar{
+  flex:none;height:var(--tabbar-h);display:grid;grid-template-columns:repeat(5,1fr);
+  background:var(--paper-raised);border-top:var(--hairline);
+  border-radius:22px 22px 0 0;box-shadow:0 -6px 24px rgba(16,24,40,.07);
+  padding:4px 6px 8px;position:relative;z-index:10;
+}
+.tab{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:var(--ink-40);position:relative;border-radius:14px;transition:color var(--t-fast)}
+.tab span{font-size:10px;font-weight:600;letter-spacing:0}
+.tab[aria-current="true"]{color:var(--accent)}
+.tab[aria-current="true"] span{font-weight:700}
+.tab .tbadge{position:absolute;top:6px;right:calc(50% - 18px);min-width:16px;height:16px;padding:0 4px;background:var(--accent);color:#fff;font-size:9.5px;font-weight:700;border-radius:8px;display:flex;align-items:center;justify-content:center;border:2px solid var(--paper-raised)}
+
+/* ── Bottom sheet + scrim ───────────────────────── */
+.scrim{position:absolute;inset:0;background:rgba(16,24,40,.44);z-index:40;animation:fadeIn var(--t-med) var(--ease)}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.sheet{
+  position:absolute;left:0;right:0;bottom:0;z-index:50;
+  background:var(--paper-raised);border-radius:var(--r-sheet) var(--r-sheet) 0 0;
+  box-shadow:var(--shadow-sheet);padding:var(--sp-3) var(--sp-5) calc(var(--sp-6) + 8px);
+  animation:sheetUp var(--t-sheet) var(--ease);
+}
+@keyframes sheetUp{from{transform:translateY(100%)}to{transform:none}}
+.sheet .grab{width:40px;height:5px;border-radius:3px;background:var(--line-mid);margin:2px auto var(--sp-4)}
+.sheet h2{font-weight:700;font-size:var(--fs-h2);letter-spacing:-.02em}
+
+/* ── Toast ──────────────────────────────────────── */
+.toast{
+  position:absolute;left:var(--sp-5);right:var(--sp-5);bottom:calc(var(--tabbar-h) + 20px);z-index:55;
+  background:var(--ink);color:#fff;border-radius:var(--r-pill);
+  padding:13px 18px;font-size:var(--fs-body-s);font-weight:600;display:flex;gap:10px;align-items:center;
+  box-shadow:var(--shadow-pop);animation:toastIn var(--t-med) var(--ease);
+}
+.toast.leaving{animation:toastOut var(--t-med) var(--ease) forwards}
+@keyframes toastIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes toastOut{to{opacity:0;transform:translateY(10px)}}
+
+/* ── Timeline ───────────────────────────────────── */
+.tl{padding:var(--sp-1) var(--sp-4)}
+.tl-item{display:flex;gap:var(--sp-3)}
+.tl-rail{display:flex;flex-direction:column;align-items:center;width:14px;flex:none}
+.tl-dot{width:12px;height:12px;border-radius:50%;border:2.5px solid;flex:none;margin-top:3px}
+.tl-line{width:2px;flex:1;min-height:26px;border-radius:1px}
+.tl-body{padding-bottom:var(--sp-4);flex:1}
+.tl-body .t{font-weight:600;font-size:var(--fs-body-s)}
+.tl-body .m{font-size:var(--fs-caption);color:var(--ink-55);margin-top:1px}
+
+/* ── Hero (gradient balance card) ───────────────── */
+.hero-card{
+  margin:var(--sp-2) var(--sp-4) 0;padding:var(--sp-5) var(--sp-5) var(--sp-4);
+  background:var(--accent-grad);color:#fff;border:0;border-radius:22px;
+  box-shadow:0 12px 32px rgba(45,95,240,.35);position:relative;overflow:hidden;
+}
+.hero-card::after{content:'';position:absolute;top:-70px;right:-60px;width:210px;height:210px;border-radius:50%;background:rgba(255,255,255,.10);pointer-events:none}
+.hero-card::before{content:'';position:absolute;bottom:-90px;left:-40px;width:190px;height:190px;border-radius:50%;background:rgba(255,255,255,.07);pointer-events:none}
+.hero-card .eyebrow{color:rgba(255,255,255,.8)}
+.hero-amt{font-size:var(--fs-num-l);margin:5px 0 14px;letter-spacing:-.03em}
+.hero-pill{background:rgba(255,255,255,.18);color:#fff;border:1px solid rgba(255,255,255,.24)}
+.hero-actions{display:flex;gap:8px;position:relative;z-index:1}
+.hero-actions .btn{min-height:42px;font-size:13px}
+.hero-btn-solid{background:#fff;color:var(--accent-deep)}
+.hero-btn-solid:active{background:#EDF1FE}
+.hero-btn-ghost{background:rgba(255,255,255,.16);color:#fff;border:1px solid rgba(255,255,255,.28)}
+.hero-btn-ghost:active{background:rgba(255,255,255,.26)}
+.hero-stats{display:flex;gap:18px;margin-top:14px;position:relative;z-index:1}
+.hero-stats .n{font-weight:700;font-size:15px}
+.hero-stats .l{font-size:var(--fs-caption);color:rgba(255,255,255,.75)}
+
+/* ── Quick actions grid ─────────────────────────── */
+.qa{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:0 var(--sp-4)}
+.qa button{display:flex;flex-direction:column;align-items:center;gap:7px;padding:6px 2px 4px}
+.qa .qi{width:52px;height:52px;border-radius:18px;background:var(--paper-raised);border:var(--hairline);box-shadow:0 1px 2px rgba(16,24,40,.05);display:flex;align-items:center;justify-content:center;color:var(--accent);transition:transform var(--t-fast),background var(--t-fast)}
+.qa button:active .qi{transform:scale(.93);background:var(--accent-tint)}
+.qa span{font-size:11px;font-weight:600;color:var(--ink-70)}
+
+/* ── Screen-specific bits ───────────────────────── */
+.scan-stage{flex:1;display:flex;align-items:center;justify-content:center;background:#0C1222;position:relative}
+.scan-frame{width:270px;height:380px;position:relative;display:flex;align-items:center;justify-content:center;border-radius:22px;border:1.5px dashed rgba(255,255,255,.35)}
+.scan-frame .rg{display:none}
+.scan-hint{color:rgba(255,255,255,.75);font-size:var(--fs-body-s);text-align:center;line-height:1.6;letter-spacing:.01em}
+.scan-line{position:absolute;left:14px;right:14px;height:2.5px;background:linear-gradient(90deg,transparent,#6E96F8,transparent);animation:scanSweep 1.4s ease-in-out infinite;border-radius:2px}
+@keyframes scanSweep{0%,100%{top:10%}50%{top:88%}}
+.shutter{width:68px;height:68px;border-radius:50%;border:3px solid #fff;display:flex;align-items:center;justify-content:center}
+.shutter i{width:52px;height:52px;border-radius:50%;background:var(--accent);transition:transform var(--t-fast)}
+.shutter:active i{transform:scale(.88)}
+
+.kv{display:flex;justify-content:space-between;gap:var(--sp-3);padding:10px 0;border-bottom:var(--hairline);font-size:var(--fs-body-s)}
+.kv:last-child{border-bottom:0}
+.kv .k{color:var(--ink-55)}
+.kv .v{font-weight:600;text-align:right;letter-spacing:-.01em}
+
+.compare{display:grid;grid-template-columns:1fr 1fr;gap:var(--sp-2)}
+.compare .card-flat{padding:var(--sp-4)}
+.compare .amt-l{font-weight:700;font-size:24px;letter-spacing:-.03em;margin:5px 0 9px}
+
+.avatar{width:54px;height:54px;min-width:54px;border-radius:50%;background:var(--accent-grad);color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;letter-spacing:-.02em}
+
+.empty{padding:var(--sp-7) var(--sp-5);text-align:center;color:var(--ink-55);font-size:var(--fs-body-s);line-height:1.6}
+.decided-note{margin:0;padding:12px 14px;font-size:var(--fs-body-s)}
+
+</style>
+</head>
+<body>
+<div class="stage">
+  <div class="stage-head">
+    <div class="wordmark">ClaimDesk</div>
+    <div class="stage-sub">Employee app · v2.0</div>
+  </div>
+  <div class="device">
+    <div class="statusbar">
+      <span>9:41</span>
+      <span style="display:flex;gap:6px;align-items:center">
+        <svg width="17" height="11" viewBox="0 0 17 11" fill="none"><rect x="0" y="6" width="3" height="5" rx=".6" fill="#1A1D1F"/><rect x="4.6" y="4" width="3" height="7" rx=".6" fill="#1A1D1F"/><rect x="9.2" y="2" width="3" height="9" rx=".6" fill="#1A1D1F"/><rect x="13.8" y="0" width="3" height="11" rx=".6" fill="#1A1D1F" opacity=".35"/></svg>
+        <svg width="24" height="12" viewBox="0 0 24 12" fill="none"><rect x=".5" y=".5" width="20" height="11" rx="2.5" stroke="#1A1D1F" opacity=".4"/><rect x="2" y="2" width="14" height="8" rx="1.4" fill="#1A1D1F"/><path d="M22.5 4v4a2.2 2.2 0 0 0 0-4Z" fill="#1A1D1F" opacity=".4"/></svg>
+      </span>
+    </div>
+    <div class="app" id="app"></div>
+    <div class="home-indicator"></div>
+  </div>
+  <div class="stage-foot">
+    <b>Tap through:</b> Scan a receipt → confirm OCR → save · Expenses → select → create claim → submit · Claims → status trail · Approvals → decide with reason.
+  </div>
+</div>
+
+<script>
+/* ════════════════════ ICONS ════════════════════ */
+const I = (paths, s=20, sw=1.6, stroke='currentColor') =>
+  `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="${stroke}" stroke-width="${sw}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths.map(d=>`<path d="${d}"/>`).join('')}</svg>`;
+const ic = {
+  back:   s=>I(['M14 6l-6 6 6 6'], s||22, 1.8),
+  close:  s=>I(['M18 6 6 18','M6 6l12 12'], s||20, 1.8),
+  chev:   s=>I(['M9 5l7 7-7 7'], s||16, 1.8),
+  chevD:  s=>I(['M6 9l6 6 6-6'], s||14, 1.8),
+  bell:   s=>I(['M10.3 21a1.94 1.94 0 0 0 3.4 0','M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9'], s||19),
+  camera: s=>I(['M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3Z','M12 16.2a3.2 3.2 0 1 0 0-6.4 3.2 3.2 0 0 0 0 6.4Z'], s||22),
+  plus:   s=>I(['M12 5v14','M5 12h14'], s||18),
+  car:    s=>I(['M19 17h2v-4l-2-5H5L3 13v4h2','M7.5 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z','M16.5 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z'], s||18),
+  warn:   s=>I(['M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z','M12 9v4','M12 17h.01'], s||18),
+  copy:   s=>I(['M9 9h12v12H9z','M5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1'], s||18),
+  checkS: s=>I(['M20 6 9 17l-5-5'], s||14, 2.6),
+  check:  s=>I(['M20 6 9 17l-5-5'], s||18, 1.8),
+  clip:   s=>I(['M21.44 11.05 12.25 20.24a5 5 0 0 1-7.07-7.07l8.49-8.49a3.5 3.5 0 0 1 4.95 4.95l-8.49 8.49a2 2 0 0 1-2.83-2.83l7.78-7.78'], s||18),
+  home:   s=>I(['M3 10.5 12 3l9 7.5','M5 9.5V21h14V9.5'], s||21),
+  doc:    s=>I(['M4 3h11l5 5v13H4z','M8 11h8','M8 15h5'], s||21),
+  claims: s=>I(['M4 5h16v14H4z','M8 9h8','M8 13h4','M8 17h6'], s||21),
+  user:   s=>I(['M4 21v-1a5 5 0 0 1 5-5h6a5 5 0 0 1 5 5v1','M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z'], s||21),
+  info:   s=>I(['M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z','M12 11v5','M12 8h.01'], s||18),
+};
+
+/* ════════════════════ DATA ════════════════════ */
+const fmt = n => '\u20B9' + Number(n).toLocaleString('en-IN');
+
+const DB = {
+  user: { name:'Priya Nair', role:'Assistant Manager · Audit · Pune', id:'EMP-10428', email:'priya.nair@firm.in', grade:'Assistant Manager · Grade M2', dept:'Audit & Assurance', branch:'Pune', mgr:'R. Deshpande', acct:'HDFC ••••4417' },
+  expenses: [
+    { id:'E-4821', merchant:'Uber India', cat:'Taxi / Local Conveyance', date:'21 Aug', amount:1850, cls:'Client billable', eng:'FY26 Statutory Audit', flag:'' },
+    { id:'E-4818', merchant:'Vivanta Pune', cat:'Accommodation', date:'20 Aug', amount:5500, cls:'Client billable', eng:'FY26 Statutory Audit', flag:'exception' },
+    { id:'E-4817', merchant:'IndiGo 6E-2143', cat:'Air Travel', date:'19 Aug', amount:7420, cls:'Client billable', eng:'FY26 Statutory Audit', flag:'' },
+    { id:'E-4809', merchant:'Cafe Peter', cat:'Meals', date:'18 Aug', amount:640, cls:'Internal', eng:'Internal — no engagement', flag:'duplicate' },
+    { id:'E-4805', merchant:'Pune → Nashik (118 km)', cat:'Mileage', date:'17 Aug', amount:1416, cls:'Client non-billable', eng:'FY26 Statutory Audit', flag:'' },
+  ],
+  claims: [
+    { no:'CLM-2026-0139', title:'Aug W3 · client travel', total:14770, status:'IN APPROVAL', chip:'chip-accent', meta:'Engagement Manager · R. Deshpande · pending 2 days' },
+    { no:'CLM-2026-0128', title:'Jul W4 · client travel', total:6410, status:'VERIFIED', chip:'chip-ok', meta:'Finance verified · in payment batch PB-0042' },
+    { no:'CLM-2026-0131', title:'Jul closing travel', total:9240, status:'RETURNED', chip:'chip-danger', meta:'R. Deshpande: attach the hotel GST invoice' },
+    { no:'CLM-2026-0134', title:'Aug W2 · internal', total:3180, status:'PAID', chip:'chip-muted', meta:'Paid 18 Aug · NEFT ref 88213' },
+  ],
+  timeline: [
+    { t:'Submitted', m:'24 Aug, 18:42 · by you', done:true },
+    { t:'Engagement Manager', m:'R. Deshpande · pending 2 days of 3-day SLA', active:true },
+    { t:'Partner approval', m:'Not required — total under \u20B925,000' },
+    { t:'Finance verification', m:'GL code, cost centre and GST review' },
+    { t:'Payment', m:'Reference recorded on payout' },
+  ],
+  claimLines: [
+    { merchant:'IndiGo 6E-2143 · BOM–PNQ', cat:'Air Travel · 19 Aug', amount:7420, flag:'' },
+    { merchant:'Vivanta Pune', cat:'Accommodation · 20 Aug', amount:5500, flag:'Policy exception' },
+    { merchant:'Uber India', cat:'Taxi · 21 Aug', amount:1850, flag:'' },
+  ],
+  approvals: [
+    { id:'CLM-2026-0142', who:'Rohit Menon', role:'Article Assistant · Audit', total:6880, lines:'3 lines · FY26 Statutory Audit', flag:'1 policy exception', age:'Waiting 2 days' },
+    { id:'CLM-2026-0145', who:'Sneha Kulkarni', role:'Executive · Audit', total:2140, lines:'2 lines · Internal', flag:'', age:'Waiting 4 hours' },
+  ],
+  notifs: [
+    { when:'Today, 09:12', t:'Approval requested', b:'Rohit Menon submitted CLM-2026-0142 for \u20B96,880.', unread:true },
+    { when:'Today, 08:40', t:'Finance verified CLM-2026-0128', b:'Added to payment batch PB-0042. Expected payout 28 Aug.', unread:true },
+    { when:'Yesterday', t:'Claim returned', b:'CLM-2026-0131 returned by R. Deshpande — attach the hotel GST invoice.', unread:false },
+    { when:'22 Aug', t:'Reimbursement paid', b:'\u20B93,180 paid for CLM-2026-0134. NEFT reference 88213.', unread:false },
+    { when:'21 Aug', t:'Approval reminder', b:'CLM-2026-0139 has been pending with the Engagement Manager for 2 days.', unread:false },
+  ],
+  engagements: [
+    { client:'Anand Rathi Ltd', eng:'FY26 Statutory Audit', role:'Team member · open' },
+    { client:'Sahyadri Foods Pvt Ltd', eng:'FY26 Tax Audit', role:'Team member · open' },
+    { client:'Kalyani Metals', eng:'FY25 Internal Audit', role:'Team member · closed 30 Jun' },
+  ],
+  cats: ['Air Travel','Train / Bus Travel','Taxi / Local Conveyance','Accommodation','Meals','Parking','Toll','Client Meeting','Printing / Documentation','Communication / Internet','Office Supplies','Training / Certification','Other Business Expense'],
+};
+
+/* ════════════════════ STATE ════════════════════ */
+const S = {
+  screen:'home', stack:[],
+  selected:['E-4821','E-4817'],
+  removed:[],                    // ids discarded via duplicate flow
+  dupResolved:false,
+  decl:false, just:'', dist:'118',
+  scan:'idle',
+  ocr:{ merchant:'Uber India Systems Pvt Ltd', amount:'1850' },
+  m:{ merchant:'', amount:'', purpose:'', cat:'Meals', cls:'billable' },
+  mile:{ cls:'nonbillable' },
+  sheet:null, reason:'',
+  decided:null, submitted:false,
+  notifsRead:false,
+  toastMsg:null, toastTimer:null,
+};
+
+const expensesAll = () => DB.expenses.filter(e => !S.removed.includes(e.id));
+const selectedItems = () => expensesAll().filter(e => S.selected.includes(e.id));
+const selTotal = () => selectedItems().reduce((a,e)=>a+e.amount,0);
+const unreadCount = () => S.notifsRead ? 0 : DB.notifs.filter(n=>n.unread).length;
+
+/* ── navigation ── */
+function go(screen, push=true){
+  if (push && screen !== S.screen) S.stack.push(S.screen);
+  S.screen = screen; S.sheet = null;
+  render();
+}
+function back(){
+  S.screen = S.stack.pop() || 'home'; S.sheet = null;
+  render();
+}
+function toast(msg){
+  clearTimeout(S.toastTimer);
+  S.toastMsg = msg; render();
+  S.toastTimer = setTimeout(()=>{
+    const el = document.querySelector('.toast');
+    if (el){ el.classList.add('leaving'); setTimeout(()=>{ S.toastMsg=null; render(); }, 200); }
+    else { S.toastMsg=null; }
+  }, 2600);
+}
+
+/* ════════════════ SHARED PARTIALS ════════════════ */
+const AV_COLORS = ['#2D5FF0','#7A5AF8','#0FA47A','#E0731D','#D6456B','#1193C2'];
+const mav = name => {
+  const initials = name.replace(/[^A-Za-z ]/g,'').trim().split(/\s+/).slice(0,2).map(w=>w[0]||'').join('').toUpperCase() || '•';
+  let h = 0; for (const ch of name) h = (h*31 + ch.charCodeAt(0)) % AV_COLORS.length;
+  return `<span class="mav" style="background:${AV_COLORS[h]}">${initials}</span>`;
+};
+
+const flagChip = f =>
+  f==='exception' ? `<span class="chip chip-warn">${ic.warn(11)} Exception</span>` :
+  f==='duplicate' ? `<span class="chip chip-danger">${ic.copy(11)} Duplicate</span>` : '';
+
+const appbarBack = (eyebrow, title, action='back') => `
+  <header class="appbar">
+    <button class="iconbtn plain" data-act="${action}" aria-label="Back">${ic.back()}</button>
+    <div class="titles">
+      <div class="eyebrow">${eyebrow}</div>
+      <h1>${title}</h1>
+    </div>
+  </header>`;
+
+const tabbar = () => {
+  const tabs = [
+    { k:'home', l:'Home', i:ic.home() },
+    { k:'expenses', l:'Expenses', i:ic.doc() },
+    { k:'claims', l:'Claims', i:ic.claims() },
+    { k:'approvals', l:'Approvals', i:ic.check(21), badge: S.decided ? 1 : 2 },
+    { k:'profile', l:'Profile', i:ic.user() },
+  ];
+  return `<nav class="tabbar" aria-label="Main">
+    ${tabs.map(t=>`
+      <button class="tab" data-act="tab" data-to="${t.k}" aria-current="${S.screen===t.k}">
+        ${t.i}<span>${t.l}</span>
+        ${t.k==='approvals' && t.badge ? `<i class="tbadge">${t.badge}</i>` : ''}
+      </button>`).join('')}
+  </nav>`;
+};
+
+/* ════════════════════ SCREENS ════════════════════ */
+const V = {};
+
+/* ── HOME ── */
+V.home = () => {
+  const items = expensesAll();
+  const recent = items.slice(0,3);
+  const hasEx = items.some(e=>e.flag==='exception');
+  const hasDup = !S.dupResolved && items.some(e=>e.flag==='duplicate');
+  return `
+  <div class="scroll">
+    <div style="padding:12px 16px 6px;display:flex;align-items:center;justify-content:space-between;gap:12px">
+      <div style="display:flex;align-items:center;gap:11px">
+        <span class="mav" style="background:var(--accent-grad);width:42px;height:42px;min-width:42px;font-size:14px">PN</span>
+        <div>
+          <div class="cap">Welcome back,</div>
+          <div style="font-weight:700;font-size:16px;letter-spacing:-.02em">${DB.user.name}</div>
+        </div>
+      </div>
+      <button class="iconbtn" data-act="go" data-to="notifs" style="position:relative" aria-label="Notifications${unreadCount()?`, ${unreadCount()} unread`:''}">
+        ${ic.bell()}${unreadCount()?'<i class="badge-dot"></i>':''}
+      </button>
+    </div>
+
+    <section class="hero-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;position:relative;z-index:1">
+        <div class="eyebrow">Awaiting reimbursement</div>
+        <span class="chip hero-pill">2 in flight</span>
+      </div>
+      <div class="num hero-amt" style="position:relative;z-index:1">${fmt(17940)}</div>
+      <div class="hero-actions">
+        <button class="btn hero-btn-solid" data-act="go" data-to="scan" style="flex:1;gap:8px">${ic.camera(17)} Scan receipt</button>
+        <button class="btn hero-btn-ghost" data-act="go" data-to="expenses" style="flex:1">New claim</button>
+      </div>
+      <div class="hero-stats">
+        <div><span class="n">2</span> <span class="l">claims in approval</span></div>
+        <div><span class="n">1</span> <span class="l">verified, payment due</span></div>
+      </div>
+    </section>
+
+    <div class="section-label">Quick actions</div>
+    <div class="qa">
+      <button data-act="go" data-to="scan"><span class="qi">${ic.camera(21)}</span><span>Scan</span></button>
+      <button data-act="go" data-to="manual"><span class="qi">${ic.plus(20)}</span><span>Manual</span></button>
+      <button data-act="go" data-to="mileage"><span class="qi">${ic.car(21)}</span><span>Mileage</span></button>
+      <button data-act="tab" data-to="claims"><span class="qi">${ic.claims(21)}</span><span>Claims</span></button>
+    </div>
+
+    ${(hasEx||hasDup)?`
+    <div class="section-label" style="display:flex;align-items:baseline;justify-content:space-between;padding-right:16px">
+      <span>Smart checks</span>
+      <span class="cap" style="font-weight:600;color:var(--accent)">${(hasEx?1:0)+(hasDup?1:0)} need you</span>
+    </div>
+    <div style="padding:0 16px;display:flex;flex-direction:column;gap:8px">
+      ${hasEx?`
+      <button class="callout callout-warn" data-act="go" data-to="exception" style="width:100%">
+        <span class="ico">${ic.warn(17)}</span>
+        <span style="flex:1;text-align:left">
+          <span class="ct" style="display:block">Justification needed — Vivanta Pune</span>
+          <span>\u20B95,500 against a <b style="color:var(--warn)">\u20B94,000/night limit</b>. Over by \u20B91,500.</span>
+        </span>
+        ${ic.chev(14)}
+      </button>`:''}
+      ${hasDup?`
+      <button class="callout callout-danger" data-act="go" data-to="dup" style="width:100%">
+        <span class="ico">${ic.copy(16)}</span>
+        <span style="flex:1;text-align:left">
+          <span class="ct" style="display:block">Possible duplicate — Cafe Peter</span>
+          <span>\u20B9640 on 18 Aug matches <b style="color:var(--danger)">E-4802</b>. Resolve before claiming.</span>
+        </span>
+        ${ic.chev(14)}
+      </button>`:''}
+    </div>`:''}
+
+    <div class="section-label" style="display:flex;align-items:baseline;justify-content:space-between;padding-right:16px">
+      <span>Unclaimed expenses</span>
+      <button data-act="go" data-to="expenses" style="font-size:12px;font-weight:700;color:var(--accent)">View all</button>
+    </div>
+    <div class="card-flat list" style="margin:0 16px;overflow:hidden">
+      ${recent.map((e,i)=>`
+        <div class="row" style="border-bottom:${i===recent.length-1?'0':'var(--hairline)'}">
+          ${mav(e.merchant)}
+          <div class="grow">
+            <div class="t">${e.merchant}</div>
+            <div class="cap">${e.cat} · ${e.date}</div>
+          </div>
+          <div class="amt">${fmt(e.amount)}</div>
+        </div>`).join('')}
+    </div>
+    <div style="height:24px"></div>
+  </div>`;
+};
+
+/* ── EXPENSES ── */
+V.expenses = () => {
+  const items = expensesAll();
+  const hasSel = S.selected.length>0;
+  return `
+  <header class="appbar" style="align-items:flex-end;padding-top:14px">
+    <div class="titles">
+      <div class="eyebrow">Not yet claimed</div>
+      <h1>Expenses</h1>
+    </div>
+  </header>
+  <div style="display:flex;gap:6px;padding:0 16px 12px">
+    <span class="chip chip-accent">Unclaimed · ${items.length}</span>
+    <span class="chip chip-outline">Draft · 0</span>
+    <span class="chip chip-outline">In claim · 3</span>
+  </div>
+  <div class="scroll">
+    <div class="card-flat list" style="margin:0 16px;overflow:hidden">
+      ${items.map(e=>{
+        const on = S.selected.includes(e.id);
+        return `
+        <div class="row" style="align-items:flex-start;padding:14px 16px">
+          <button class="check" role="checkbox" aria-checked="${on}" aria-label="Select ${e.merchant}" data-act="toggle" data-id="${e.id}" style="margin-top:2px">
+            ${ic.checkS(13)}
+          </button>
+          ${mav(e.merchant)}
+          <div class="grow">
+            <div style="display:flex;justify-content:space-between;gap:10px;align-items:baseline">
+              <div class="t">${e.merchant}</div>
+              <div class="amt">${fmt(e.amount)}</div>
+            </div>
+            <div class="cap" style="margin-top:1px">${e.date} · ${e.cat}</div>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:7px;align-items:center">
+              <span class="chip chip-outline">${e.cls}</span>
+              <span class="cap">${e.eng}</span>
+            </div>
+            ${e.flag==='exception'?`<div class="callout callout-warn" style="margin-top:9px;padding:8px 10px">${ic.warn(14)}<span>\u20B91,500 over the \u20B94,000/night limit. Justification required before submission.</span></div>`:''}
+            ${e.flag==='duplicate'&&!S.dupResolved?`<div class="callout callout-danger" style="margin-top:9px;padding:8px 10px">${ic.copy(14)}<span>Possible duplicate of E-4802 · same date, merchant and amount.</span></div>`:''}
+            ${e.flag==='duplicate'&&S.dupResolved?`<div class="callout callout-ok" style="margin-top:9px;padding:8px 10px">${ic.check(14)}<span>Duplicate check resolved — noted in the audit trail.</span></div>`:''}
+          </div>
+        </div>`;}).join('')}
+    </div>
+    <div style="height:${hasSel?'92px':'24px'}"></div>
+  </div>
+  ${hasSel?`
+  <div class="footer" style="flex-direction:row;align-items:center;gap:12px;background:var(--paper-raised);border-top:var(--hairline);border-radius:22px 22px 0 0;box-shadow:0 -6px 24px rgba(16,24,40,.07)">
+    <div style="flex:1">
+      <div class="num" style="font-size:22px;line-height:1">${fmt(selTotal())}</div>
+      <div class="cap">${S.selected.length} selected</div>
+    </div>
+    <button class="btn btn-primary" data-act="go" data-to="review" style="min-width:150px">Create claim</button>
+  </div>`:''}`;
+};
+
+/* ── REVIEW / SUBMIT ── */
+V.review = () => {
+  const lines = selectedItems();
+  const hasEx = lines.some(e=>e.flag==='exception');
+  const hasDup = !S.dupResolved && lines.some(e=>e.flag==='duplicate');
+  return `
+  ${appbarBack('New claim · draft','Review and submit')}
+  <div class="scroll" style="padding:0 16px">
+    <div class="field" style="margin-top:4px">
+      <label>Claim title</label>
+      <div class="input readonly">Aug W4 · Anand Rathi site visit</div>
+    </div>
+
+    <div class="section-label" style="padding-left:0;padding-right:0">Lines</div>
+    ${lines.length?`
+    <div class="card-flat list" style="border-radius:var(--r)">
+      ${lines.map((l,i)=>`
+        <div class="row" style="border-bottom:${i===lines.length-1?'0':'var(--hairline)'}">
+          ${mav(l.merchant)}
+          <div class="grow">
+            <div class="t">${l.merchant}</div>
+            <div class="cap">${l.cat} · ${l.date}</div>
+            ${l.flag?`<div style="margin-top:5px">${flagChip(l.flag)}</div>`:''}
+          </div>
+          <div class="amt">${fmt(l.amount)}</div>
+        </div>`).join('')}
+    </div>`:`
+    <div class="card-flat empty">No expenses selected.<br>Go back and tick at least one unclaimed expense.</div>`}
+
+    <div class="card" style="margin-top:16px;padding:16px 18px;display:flex;justify-content:space-between;align-items:flex-end">
+      <div>
+        <div class="eyebrow">Total claimed</div>
+        <div class="cap" style="margin-top:2px">${lines.length} lines · ${lines.filter(e=>e.cls!=='Internal').length} client-billable</div>
+      </div>
+      <div class="num" style="font-size:30px;line-height:1">${fmt(selTotal())}</div>
+    </div>
+
+    ${hasEx?`
+    <div class="callout callout-warn" style="margin-top:12px">
+      ${ic.warn(16)}
+      <div><div class="ct">Policy exception in this claim</div>
+      Vivanta Pune, \u20B91,500 over the accommodation limit. Justification attached. Routes to a Partner in addition to the Engagement Manager.</div>
+    </div>`:''}
+    ${hasDup?`
+    <div class="callout callout-danger" style="margin-top:12px">
+      ${ic.copy(15)}
+      <div><div class="ct">Duplicate flag carried into the claim</div>
+      Cafe Peter \u20B9640 matches E-4802. Resolve it before submitting or Finance will return the claim.</div>
+    </div>`:''}
+
+    <button class="checkline" data-act="decl" style="margin-top:18px" role="checkbox" aria-checked="${S.decl}">
+      <span class="check" aria-checked="${S.decl}" style="margin-top:1px">${ic.checkS(13)}</span>
+      <span class="body-s" style="color:var(--ink-70);line-height:1.55">I declare that these expenses were incurred for firm business, are supported by the attached receipts, and have not been claimed before.</span>
+    </button>
+    <div style="height:16px"></div>
+  </div>
+  <div class="footer">
+    <button class="btn btn-primary btn-block" data-act="submitClaim" ${(!S.decl||!lines.length)?'disabled':''}>Submit claim</button>
+    <div class="hint">${S.decl? 'Goes to R. Deshpande first · 3-day SLA' : 'Accept the declaration to enable submission'}</div>
+  </div>`;
+};
+
+/* ── CLAIMS LIST ── */
+V.claims = () => {
+  const list = S.submitted
+    ? [{ no:'CLM-2026-0147', title:'Aug W4 · Anand Rathi site visit', total:selTotal()||14770, status:'IN APPROVAL', chip:'chip-accent', meta:'Submitted just now · with R. Deshpande' }, ...DB.claims]
+    : DB.claims;
+  return `
+  <header class="appbar" style="align-items:flex-end;padding-top:14px">
+    <div class="titles">
+      <div class="eyebrow">${list.length} this quarter</div>
+      <h1>Claims</h1>
+    </div>
+  </header>
+  <div class="scroll" style="padding:4px 16px 24px;display:flex;flex-direction:column;gap:10px">
+    ${list.map(c=>`
+      <button class="card" data-act="go" data-to="claimDetail" style="padding:14px 16px;text-align:left;display:block">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+          <span class="eyebrow" style="letter-spacing:.06em">${c.no}</span>
+          <span class="chip ${c.chip}">${c.status}</span>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-top:7px">
+          <span style="font-weight:500">${c.title}</span>
+          <span class="amt">${fmt(c.total)}</span>
+        </div>
+        <div class="cap" style="margin-top:4px">${c.meta}</div>
+      </button>`).join('')}
+  </div>`;
+};
+
+/* ── CLAIM DETAIL ── */
+V.claimDetail = () => `
+  ${appbarBack('CLM-2026-0139','Aug W3 · client travel')}
+  <div class="scroll">
+    <section class="card" style="margin:2px 16px 0;padding:16px 18px">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start">
+        <div>
+          <div class="eyebrow">Claimed</div>
+          <div class="num" style="font-size:32px;line-height:1.05;margin-top:3px">${fmt(14770)}</div>
+        </div>
+        <span class="chip chip-accent">In approval</span>
+      </div>
+      <div class="cap" style="margin-top:9px">3 lines · Anand Rathi Ltd / FY26 Statutory Audit · client billable</div>
+    </section>
+
+    <div class="section-label">Status trail</div>
+    <div class="tl">
+      ${DB.timeline.map((t,i)=>{
+        const last = i===DB.timeline.length-1;
+        const dot = t.done ? 'border-color:var(--accent);background:var(--accent)'
+                  : t.active ? 'border-color:var(--accent);background:var(--paper-raised)'
+                  : 'border-color:var(--ink-25);background:var(--paper-raised)';
+        const line = t.done ? 'background:var(--accent)' : 'background:var(--line)';
+        const tone = (t.done||t.active) ? '' : 'color:var(--ink-40)';
+        return `
+        <div class="tl-item">
+          <div class="tl-rail">
+            <span class="tl-dot" style="${dot}"></span>
+            ${last?'':`<span class="tl-line" style="${line}"></span>`}
+          </div>
+          <div class="tl-body" style="${tone}">
+            <div class="t">${t.t}${t.active?' <span class="chip chip-accent" style="margin-left:6px;vertical-align:1px">Now</span>':''}</div>
+            <div class="m">${t.m}</div>
+          </div>
+        </div>`;}).join('')}
+    </div>
+
+    <div class="section-label">Lines</div>
+    <div class="card-flat list" style="margin:0 16px;border-radius:var(--r)">
+      ${DB.claimLines.map((l,i)=>`
+        <div class="row" style="border-bottom:${i===DB.claimLines.length-1?'0':'var(--hairline)'}">
+          ${mav(l.merchant)}
+          <div class="grow">
+            <div class="t">${l.merchant}</div>
+            <div class="cap">${l.cat}</div>
+            ${l.flag?`<div style="margin-top:5px"><span class="chip chip-warn">${ic.warn(11)} ${l.flag}</span></div>`:''}
+          </div>
+          <div class="amt">${fmt(l.amount)}</div>
+        </div>`).join('')}
+    </div>
+
+    <div style="display:flex;gap:8px;padding:18px 16px 24px">
+      <button class="btn btn-secondary" style="flex:1" data-act="toastMsg" data-msg="Withdraw request sent to R. Deshpande">Withdraw</button>
+      <button class="btn btn-secondary" style="flex:1" data-act="toastMsg" data-msg="Audit history opens in the web console">Audit history</button>
+    </div>
+  </div>`;
+
+/* ── SCAN ── */
+V.scan = () => `
+  <header class="appbar" style="background:#0C1222;color:#F7F9FA;min-height:52px">
+    <button class="iconbtn plain" data-act="back" aria-label="Close" style="color:#FFFFFF">${ic.close()}</button>
+    <div class="titles" style="text-align:center">
+      <div style="font-weight:600;font-size:15px">Capture receipt</div>
+    </div>
+    <span style="width:40px"></span>
+  </header>
+  <div class="scan-stage">
+    <div class="scan-frame reg">
+      <i class="rg tl"></i><i class="rg tr"></i><i class="rg bl"></i><i class="rg br"></i>
+      ${S.scan==='idle'
+        ? `<div class="scan-hint">Align the receipt<br>inside the frame</div>`
+        : `<div class="scan-line"></div>
+           <div class="scan-hint" style="letter-spacing:.12em;text-transform:uppercase;font-size:11px">Reading receipt…</div>`}
+    </div>
+  </div>
+  <div style="flex:none;background:#0C1222;padding:14px 20px calc(20px + 8px)">
+    <div style="text-align:center;color:rgba(255,255,255,.6);font-size:11.5px;line-height:1.5;margin-bottom:14px">Amount, date, merchant, GSTIN and tax lines are extracted — you confirm every field.</div>
+    <div style="display:flex;align-items:center;justify-content:space-between">
+      <button style="color:rgba(255,255,255,.85);font-size:13px;font-weight:500;min-width:64px;min-height:44px" data-act="toastMsg" data-msg="Photo library opens here">Gallery</button>
+      <button class="shutter" data-act="capture" aria-label="Capture" ${S.scan==='busy'?'disabled':''}><i></i></button>
+      <button style="color:rgba(255,255,255,.85);font-size:13px;font-weight:500;min-width:64px;min-height:44px" data-act="go" data-to="manual">Manual</button>
+    </div>
+  </div>`;
+
+/* ── OCR CONFIRM ── */
+V.ocr = () => `
+  ${appbarBack('Extracted · confirm before saving','New expense')}
+  <div class="scroll" style="padding:0 16px">
+    <div class="card" style="display:flex;gap:14px;padding:12px;align-items:stretch">
+      <div style="width:74px;min-width:74px;background:var(--paper-sunken);border:var(--hairline);border-radius:var(--r);display:flex;align-items:center;justify-content:center;text-align:center" class="eyebrow">receipt<br>scan</div>
+      <div style="flex:1;display:flex;flex-direction:column;justify-content:space-between;padding:2px 0">
+        <div>
+          <div class="eyebrow">Total detected</div>
+          <div class="num" style="font-size:28px;line-height:1.1;margin-top:2px">\u20B91,850</div>
+          <span class="chip chip-ok" style="margin-top:6px">OCR 0.97</span>
+        </div>
+        <button style="align-self:flex-start;font-size:12px;font-weight:600;color:var(--accent);min-height:32px" data-act="toastMsg" data-msg="Original receipt image opens here">View original receipt →</button>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:16px;margin-top:18px">
+      <div class="field">
+        <label>Merchant · <span class="conf">ocr 0.91</span></label>
+        <input class="input" value="${S.ocr.merchant}" data-bind="ocr.merchant" autocomplete="off">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="field">
+          <label>Amount · <span class="conf">ocr 0.97</span></label>
+          <input class="input num" inputmode="decimal" value="${S.ocr.amount}" data-bind="ocr.amount" style="font-size:17px">
+        </div>
+        <div class="field">
+          <label>Date · <span class="conf">ocr 0.99</span></label>
+          <div class="input readonly" style="display:flex;align-items:center">21 Aug 2026</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Category</label>
+        <button class="selectlike input" data-act="toastMsg" data-msg="Category picker opens here">Taxi / Local Conveyance ${ic.chevD()}</button>
+      </div>
+      <div class="field">
+        <label>Classification</label>
+        <div class="seg" role="group">
+          <button aria-pressed="true">Client billable</button>
+          <button aria-pressed="false">Non-billable</button>
+          <button aria-pressed="false">Internal</button>
+        </div>
+      </div>
+      <div class="card-flat" style="padding:12px 14px;display:flex;flex-direction:column;gap:12px">
+        <div class="field">
+          <label>Client / engagement</label>
+          <button class="selectlike input" data-act="toastMsg" data-msg="Only engagements you are assigned to appear here">Anand Rathi Ltd · FY26 Statutory Audit ${ic.chevD()}</button>
+        </div>
+        <div class="field">
+          <label>Business purpose</label>
+          <div class="input readonly">Airport to client office, statutory audit fieldwork</div>
+        </div>
+      </div>
+      <div class="callout callout-ok">
+        ${ic.check(16)}
+        <div><div class="ct">Within policy</div>
+        Local conveyance, no per-trip cap. GSTIN 27AABCU9603R1ZM captured. No duplicate found.</div>
+      </div>
+    </div>
+    <div style="height:16px"></div>
+  </div>
+  <div class="footer">
+    <div class="footer-row">
+      <button class="btn btn-secondary" data-act="draftSave">Save draft</button>
+      <button class="btn btn-primary" data-act="saveOcr">Save expense</button>
+    </div>
+  </div>`;
+
+/* ── MANUAL ENTRY ── */
+V.manual = () => {
+  const m = S.m;
+  const amt = parseFloat(m.amount)||0;
+  const ready = !!m.merchant.trim() && amt>0 && m.purpose.trim().length>3;
+  return `
+  ${appbarBack('No receipt scanned · manual entry','New expense')}
+  <div class="scroll" style="padding:0 16px">
+    <div style="display:flex;flex-direction:column;gap:16px;margin-top:2px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="field">
+          <label>Amount · INR</label>
+          <input class="input num" inputmode="decimal" placeholder="0" value="${m.amount}" data-bind="m.amount" style="font-size:17px">
+        </div>
+        <div class="field">
+          <label>Date</label>
+          <div class="input readonly" style="display:flex;align-items:center">26 Aug 2026</div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Merchant</label>
+        <input class="input" placeholder="Who was paid" value="${m.merchant}" data-bind="m.merchant" autocomplete="off">
+      </div>
+      <div class="field">
+        <label>Category</label>
+        <select class="input" data-bind="m.cat">
+          ${DB.cats.map(c=>`<option ${c===m.cat?'selected':''}>${c}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field">
+        <label>Classification</label>
+        <div class="seg" role="group" aria-label="Classification">
+          <button data-act="mcls" data-v="billable" aria-pressed="${m.cls==='billable'}">Client billable</button>
+          <button data-act="mcls" data-v="nonbillable" aria-pressed="${m.cls==='nonbillable'}">Non-billable</button>
+          <button data-act="mcls" data-v="internal" aria-pressed="${m.cls==='internal'}">Internal</button>
+        </div>
+      </div>
+      ${m.cls!=='internal'?`
+      <div class="card-flat" style="padding:12px 14px;display:flex;flex-direction:column;gap:12px">
+        <div class="field">
+          <label>Client · required</label>
+          <button class="selectlike input" data-act="toastMsg" data-msg="Client picker opens here">Anand Rathi Ltd ${ic.chevD()}</button>
+        </div>
+        <div class="field">
+          <label>Engagement · required</label>
+          <button class="selectlike input" data-act="toastMsg" data-msg="Engagement picker opens here">FY26 Statutory Audit ${ic.chevD()}</button>
+          <div class="cap">Only engagements you are assigned to appear here.</div>
+        </div>
+      </div>`:''}
+      <div class="field">
+        <label>Business purpose</label>
+        <textarea class="input" rows="3" placeholder="What was this for, and for whom?" data-bind="m.purpose">${m.purpose}</textarea>
+      </div>
+      <button class="card-flat" data-act="toastMsg" data-msg="Camera or file picker opens here" style="display:flex;gap:12px;align-items:center;padding:12px 14px;text-align:left;width:100%">
+        <span style="color:var(--accent)">${ic.clip(19)}</span>
+        <span style="flex:1">
+          <span style="display:block;font-weight:600;font-size:var(--fs-body-s)">Attach receipt</span>
+          <span class="cap">${amt>500?'Receipt mandatory above \u20B9500 — attach before saving.':'Receipt optional below \u20B9500 for this category.'}</span>
+        </span>
+        <span class="chip chip-accent">Add</span>
+      </button>
+      <div class="card" style="padding:14px 18px;display:flex;justify-content:space-between;align-items:center">
+        <span class="eyebrow">Claiming</span>
+        <span class="num" style="font-size:26px;line-height:1">${amt>0?fmt(Math.round(amt)):'\u20B9—'}</span>
+      </div>
+    </div>
+    <div style="height:16px"></div>
+  </div>
+  <div class="footer">
+    <button class="btn btn-primary btn-block" data-act="saveManual" ${ready?'':'disabled'}>Save expense</button>
+    <div class="hint">${ready?'Policy checked at save and again at submission.':'Merchant, amount and business purpose are required.'}</div>
+  </div>`;
+};
+
+/* ── MILEAGE ── */
+V.mileage = () => {
+  const dist = parseFloat(S.dist)||0;
+  return `
+  ${appbarBack('Own vehicle · no receipt needed','Mileage')}
+  <div class="scroll" style="padding:0 16px">
+    <div style="display:flex;flex-direction:column;gap:16px;margin-top:2px">
+      <div class="field"><label>From</label><div class="input readonly">Office · Baner, Pune</div></div>
+      <div class="field"><label>To</label><div class="input readonly">Client plant · Sinnar, Nashik</div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="field">
+          <label>Distance (km)</label>
+          <input class="input num" inputmode="decimal" value="${S.dist}" data-bind="dist" style="font-size:17px">
+        </div>
+        <div class="field"><label>Date</label><div class="input readonly" style="display:flex;align-items:center">26 Aug 2026</div></div>
+      </div>
+      <div class="card" style="padding:16px 18px;background:var(--accent-tint);border-color:rgba(45,95,240,.18)">
+        <div class="eyebrow" style="color:var(--accent-deep)">Reimbursement</div>
+        <div class="num" style="font-size:36px;line-height:1.1;margin:4px 0 6px">${fmt(Math.round(dist*12))}</div>
+        <div class="cap num" style="font-family:var(--font-ui);font-weight:400">${dist||0} km × \u20B912.00 / km · 4-wheeler, FY26 rate card</div>
+      </div>
+      <div class="field">
+        <label>Classification</label>
+        <div class="seg" role="group">
+          <button data-act="milecls" data-v="billable" aria-pressed="${S.mile.cls==='billable'}">Client billable</button>
+          <button data-act="milecls" data-v="nonbillable" aria-pressed="${S.mile.cls==='nonbillable'}">Non-billable</button>
+          <button data-act="milecls" data-v="internal" aria-pressed="${S.mile.cls==='internal'}">Internal</button>
+        </div>
+      </div>
+      <div class="field"><label>Purpose</label><div class="input readonly">Inventory count attendance, FY26 audit</div></div>
+    </div>
+    <div style="height:16px"></div>
+  </div>
+  <div class="footer">
+    <button class="btn btn-primary btn-block" data-act="saveMileage" ${dist>0?'':'disabled'}>Save mileage expense</button>
+    ${dist>0?'':'<div class="hint">Enter a distance to continue</div>'}
+  </div>`;
+};
+
+/* ── EXCEPTION ── */
+V.exception = () => {
+  const ok = S.just.trim().length>=20;
+  return `
+  ${appbarBack('E-4818 · accommodation','Policy exception')}
+  <div class="scroll" style="padding:0 16px">
+    <div class="card" style="padding:16px;margin-top:2px">
+      <span class="chip chip-warn">${ic.warn(11)} Justification required</span>
+      <div class="display" style="font-size:20px;margin:8px 0 12px">Accommodation limit exceeded</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+        <div style="background:var(--paper-sunken);border-radius:12px;padding:10px 12px"><div class="cap">Limit</div><div class="num" style="font-size:18px;margin-top:2px">\u20B94,000</div></div>
+        <div style="background:var(--paper-sunken);border-radius:12px;padding:10px 12px"><div class="cap">Claimed</div><div class="num" style="font-size:18px;margin-top:2px">\u20B95,500</div></div>
+        <div style="background:var(--warn-tint);border-radius:12px;padding:10px 12px"><div class="cap" style="color:var(--warn)">Over by</div><div class="num" style="font-size:18px;margin-top:2px;color:var(--warn)">\u20B91,500</div></div>
+      </div>
+      <div class="cap" style="margin-top:11px;line-height:1.55">Rule POL-ACC-04 · Manager grade, Pune, domestic · per night. An exception routes this claim to a Partner in addition to the Engagement Manager.</div>
+    </div>
+
+    <div class="field" style="margin-top:18px">
+      <label>Justification</label>
+      <textarea class="input" rows="4" placeholder="Why was the limit exceeded? Include what alternatives were considered." data-bind="just">${S.just}</textarea>
+      <div class="cap" style="text-align:right;${ok?'color:var(--ok)':''}">${S.just.trim().length} / 20 characters minimum</div>
+    </div>
+
+    <div class="card-flat" style="margin-top:8px;padding:6px 14px">
+      <div class="kv"><span class="k">Merchant</span><span class="v">Vivanta Pune</span></div>
+      <div class="kv"><span class="k">Nights</span><span class="v">1 · 20 Aug 2026</span></div>
+      <div class="kv"><span class="k">Classification</span><span class="v">Client billable</span></div>
+      <div class="kv"><span class="k">Engagement</span><span class="v">FY26 Statutory Audit</span></div>
+      <div class="kv"><span class="k">Receipt</span><span class="v" style="color:var(--ok)">Tax invoice attached</span></div>
+    </div>
+    <div style="height:16px"></div>
+  </div>
+  <div class="footer">
+    <button class="btn btn-primary btn-block" data-act="saveException" ${ok?'':'disabled'}>Save with justification</button>
+    ${ok?'':'<div class="hint">A short written reason is required for the approver</div>'}
+  </div>`;
+};
+
+/* ── DUPLICATE ── */
+V.dup = () => `
+  ${appbarBack('E-4809 · meals','Possible duplicate')}
+  <div class="scroll" style="padding:0 16px">
+    <div class="callout callout-danger" style="margin-top:2px">
+      ${ic.copy(16)}
+      <div><div class="ct">Two expenses match on four signals</div>
+      Same employee, date, merchant and amount. Submit only one, or confirm both are genuine.</div>
+    </div>
+    <div class="compare" style="margin-top:14px">
+      <div class="card-flat" style="border-color:var(--danger);border-width:1.5px">
+        <div class="eyebrow" style="color:var(--danger)">E-4809 · this one</div>
+        <div class="amt-l num">\u20B9640</div>
+        <div class="cap" style="line-height:1.7">Cafe Peter<br>18 Aug 2026<br>Meals · Internal<br><span style="color:var(--ok)">Receipt attached</span></div>
+      </div>
+      <div class="card-flat">
+        <div class="eyebrow">E-4802 · in CLM-2026-0134</div>
+        <div class="amt-l num">\u20B9640</div>
+        <div class="cap" style="line-height:1.7">Cafe Peter<br>18 Aug 2026<br>Meals · Internal<br>Paid 18 Aug</div>
+      </div>
+    </div>
+    <div class="callout callout-info" style="margin-top:14px">
+      ${ic.info(16)}
+      <div>If both are genuine — two separate bills on the same day — keep this expense and add a note. Finance sees the duplicate flag and your explanation in the audit trail either way.</div>
+    </div>
+    <div style="height:16px"></div>
+  </div>
+  <div class="footer">
+    <div class="footer-row">
+      <button class="btn btn-danger-ghost" data-act="dropDup">Discard this expense</button>
+      <button class="btn btn-primary" data-act="keepDup">Not a duplicate</button>
+    </div>
+  </div>`;
+
+/* ── APPROVALS ── */
+V.approvals = () => {
+  const pend = DB.approvals.filter(a => !(S.decided && a.id==='CLM-2026-0142'));
+  return `
+  <header class="appbar" style="align-items:flex-end;padding-top:14px">
+    <div class="titles">
+      <div class="eyebrow">Assigned to you · ${pend.length} pending</div>
+      <h1>Approvals</h1>
+    </div>
+  </header>
+  <div class="scroll" style="padding:4px 16px 24px;display:flex;flex-direction:column;gap:10px">
+    ${S.decided?`
+    <div class="callout ${S.decided==='approve'?'callout-ok':S.decided==='return'?'callout-info':'callout-danger'} decided-note" style="margin:0">
+      ${S.decided==='approve'?ic.check(15):S.decided==='return'?ic.info(15):ic.close(14)}
+      <span>${S.decided==='approve'?'CLM-2026-0142 approved · routed to Finance verification':S.decided==='return'?'CLM-2026-0142 returned to R. Menon for correction':'CLM-2026-0142 rejected · employee notified with your reason'}</span>
+    </div>`:''}
+    ${pend.map(a=>`
+      <button class="card" data-act="go" data-to="approvalDetail" style="padding:14px 16px;text-align:left;display:block">
+        <div style="display:flex;justify-content:space-between;align-items:baseline;gap:10px">
+          <span style="font-weight:600">${a.who}</span>
+          <span class="amt">${fmt(a.total)}</span>
+        </div>
+        <div class="cap" style="margin-top:2px">${a.role}</div>
+        <div class="body-s" style="margin-top:7px;color:var(--ink-70)">${a.lines}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:9px">
+          ${a.flag?`<span class="chip chip-warn">${ic.warn(11)} ${a.flag}</span>`:'<span class="chip chip-ok">Within policy</span>'}
+          <span class="cap">${a.age}</span>
+        </div>
+      </button>`).join('')}
+    ${pend.length===0?'<div class="empty">All caught up.<br>New submissions land here with a push notification.</div>':''}
+  </div>`;
+};
+
+/* ── APPROVAL DETAIL ── */
+V.approvalDetail = () => `
+  ${appbarBack('CLM-2026-0142 · Rohit Menon','\u20B96,880 · 3 lines','backToApprovals')}
+  <div class="scroll" style="padding:0 16px">
+    <div class="callout callout-warn" style="margin-top:2px">
+      ${ic.warn(16)}
+      <div><div class="ct">Exception first · Meals \u20B91,180 against a \u20B9800/day limit</div>
+      Employee justification: \u201CTeam dinner with two client finance staff after the late-night stock count. Split not possible on the bill.\u201D</div>
+    </div>
+
+    <div class="section-label" style="padding-left:0;padding-right:0">Engagement</div>
+    <div class="card-flat" style="padding:4px 14px">
+      <div class="kv"><span class="k">Client</span><span class="v">Anand Rathi Ltd</span></div>
+      <div class="kv"><span class="k">Engagement</span><span class="v">FY26 Statutory Audit</span></div>
+      <div class="kv"><span class="k">Classification</span><span class="v">Client billable · \u20B95,700 of \u20B96,880</span></div>
+    </div>
+
+    <div class="section-label" style="padding-left:0;padding-right:0">Lines</div>
+    <div class="card-flat list" style="border-radius:var(--r)">
+      <div class="row">
+        ${mav('Hotel Sun-n-Sand')}<div class="grow"><div class="t">Hotel Sun-n-Sand</div><div class="cap">Accommodation · 19 Aug · within limit</div></div>
+        <div class="amt">\u20B93,900</div>
+      </div>
+      <div class="row">
+        ${mav('Malaka Spice')}<div class="grow"><div class="t">Malaka Spice</div><div class="cap">Meals · 19 Aug · <span style="color:var(--warn);font-weight:600">exception</span></div></div>
+        <div class="amt">\u20B91,180</div>
+      </div>
+      <div class="row" style="border-bottom:0">
+        ${mav('Ola Cabs · 4 trips')}<div class="grow"><div class="t">Ola Cabs · 4 trips</div><div class="cap">Local conveyance · 18–20 Aug</div></div>
+        <div class="amt">\u20B91,800</div>
+      </div>
+    </div>
+    <div style="height:16px"></div>
+  </div>
+  <div class="footer">
+    <div class="footer-row">
+      <button class="btn btn-danger-ghost" data-act="sheet" data-v="reject">Reject</button>
+      <button class="btn btn-secondary" data-act="sheet" data-v="return">Return</button>
+      <button class="btn btn-primary" data-act="sheet" data-v="approve">Approve</button>
+    </div>
+  </div>`;
+
+/* ── NOTIFICATIONS ── */
+V.notifs = () => `
+  ${appbarBack('All caught up after this','Notifications')}
+  <div class="scroll">
+    <div class="list">
+      ${DB.notifs.map(n=>`
+        <div class="row" style="align-items:flex-start;padding:14px 16px;${n.unread&&!S.notifsRead?'background:var(--paper-raised)':''}">
+          <span class="mav" style="width:38px;height:38px;min-width:38px;background:${n.unread&&!S.notifsRead?'var(--accent)':'var(--paper-sunken)'};color:${n.unread&&!S.notifsRead?'#fff':'var(--ink-55)'}">${ic.bell(16)}</span>
+          <div class="grow">
+            <div style="display:flex;justify-content:space-between;gap:10px;align-items:baseline">
+              <span style="font-weight:600;font-size:var(--fs-body-s)">${n.t}</span>
+              <span class="cap" style="white-space:nowrap">${n.when}</span>
+            </div>
+            <div class="body-s" style="color:var(--ink-70);margin-top:2px;line-height:1.5">${n.b}</div>
+          </div>
+        </div>`).join('')}
+    </div>
+    <div style="height:24px"></div>
+  </div>`;
+
+/* ── PROFILE ── */
+V.profile = () => `
+  <header class="appbar" style="align-items:flex-end;padding-top:14px">
+    <div class="titles">
+      <div class="eyebrow">Signed in via firm SSO</div>
+      <h1>Profile</h1>
+    </div>
+  </header>
+  <div class="scroll" style="padding:4px 16px 24px">
+    <div class="card" style="display:flex;gap:14px;align-items:center;padding:16px">
+      <div class="avatar">PN</div>
+      <div>
+        <div style="font-weight:600;font-size:16px">${DB.user.name}</div>
+        <div class="cap" style="margin-top:1px">${DB.user.id} · ${DB.user.email}</div>
+      </div>
+    </div>
+
+    <div class="card-flat" style="margin-top:12px;padding:4px 14px">
+      <div class="kv"><span class="k">Designation</span><span class="v">${DB.user.grade}</span></div>
+      <div class="kv"><span class="k">Department</span><span class="v">${DB.user.dept}</span></div>
+      <div class="kv"><span class="k">Branch</span><span class="v">${DB.user.branch}</span></div>
+      <div class="kv"><span class="k">Reporting manager</span><span class="v">${DB.user.mgr}</span></div>
+      <div class="kv"><span class="k">Reimbursement account</span><span class="v">${DB.user.acct}</span></div>
+    </div>
+
+    <div class="section-label" style="padding-left:0;padding-right:0">Engagement assignments</div>
+    <div class="card-flat list" style="border-radius:var(--r)">
+      ${DB.engagements.map((g,i)=>`
+        <div class="row" style="border-bottom:${i===DB.engagements.length-1?'0':'var(--hairline)'}">
+          <div class="grow">
+            <div class="t">${g.client}</div>
+            <div class="cap">${g.eng} · ${g.role}</div>
+          </div>
+        </div>`).join('')}
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:8px;margin-top:18px">
+      <button class="btn btn-secondary btn-block" data-act="toastMsg" data-msg="Policy PDF for Grade M2 opens here" style="justify-content:space-between">Expense policy for my grade ${ic.chev(14)}</button>
+      <button class="btn btn-secondary btn-block" data-act="toastMsg" data-msg="Delegation settings open here" style="justify-content:space-between">Approval delegation ${ic.chev(14)}</button>
+      <button class="btn btn-danger-ghost btn-block" data-act="toastMsg" data-msg="Signed out (prototype)">Sign out</button>
+    </div>
+  </div>`;
+
+/* ════════════════ RENDER + EVENTS ════════════════ */
+const MAIN = ['home','expenses','claims','approvals','profile'];
+
+function sheetHTML(){
+  if (!S.sheet) return '';
+  const needReason = S.sheet!=='approve';
+  const title = S.sheet==='approve'?'Approve claim':S.sheet==='return'?'Return for correction':'Reject claim';
+  const ok = !needReason || S.reason.trim().length>0;
+  return `
+  <div class="scrim" data-act="closeSheet"></div>
+  <div class="sheet" role="dialog" aria-modal="true" aria-label="${title}">
+    <div class="grab"></div>
+    <h2>${title}</h2>
+    <div class="cap" style="margin-top:3px">CLM-2026-0142 · Rohit Menon · \u20B96,880</div>
+    ${needReason?`
+    <div class="field" style="margin-top:16px">
+      <label>Reason · required</label>
+      <textarea class="input" rows="3" placeholder="Tell the employee what to correct" data-bind="reason">${S.reason}</textarea>
+    </div>`:`
+    <div class="callout callout-ok" style="margin-top:16px">
+      ${ic.check(15)}
+      <span>Approving routes this claim to Finance verification. The policy exception and its justification stay on the audit trail.</span>
+    </div>`}
+    <div class="footer-row" style="margin-top:18px">
+      <button class="btn btn-secondary" data-act="closeSheet">Cancel</button>
+      <button class="btn ${S.sheet==='reject'?'btn-danger-ghost':'btn-primary'}" data-act="confirmSheet" ${ok?'':'disabled'}>Confirm</button>
+    </div>
+  </div>`;
+}
+
+function render(){
+  const app = document.getElementById('app');
+  const focused = document.activeElement;
+  const bindKey = focused && focused.dataset ? focused.dataset.bind : null;
+  const selStart = bindKey && focused.selectionStart != null ? focused.selectionStart : null;
+
+  app.innerHTML = `
+    <div class="screen" data-screen="${S.screen}">${V[S.screen]()}</div>
+    ${MAIN.includes(S.screen) ? tabbar() : ''}
+    ${sheetHTML()}
+    ${S.toastMsg ? `<div class="toast" role="status">${ic.check(15)} ${S.toastMsg}</div>` : ''}
+  `;
+
+  if (bindKey){
+    const el = app.querySelector(`[data-bind="${bindKey}"]`);
+    if (el){ el.focus(); if (selStart!=null && el.setSelectionRange) try{ el.setSelectionRange(selStart,selStart); }catch(e){} }
+  }
+}
+
+function setPath(path, val){
+  const parts = path.split('.');
+  let o = S;
+  while (parts.length>1) o = o[parts.shift()];
+  o[parts[0]] = val;
+}
+
+document.getElementById('app').addEventListener('click', ev => {
+  const el = ev.target.closest('[data-act]');
+  if (!el) return;
+  const act = el.dataset.act;
+  switch(act){
+    case 'go': go(el.dataset.to); break;
+    case 'tab': S.stack=[]; go(el.dataset.to, false); break;
+    case 'back': back(); break;
+    case 'backToApprovals': go('approvals', false); break;
+    case 'toggle': {
+      const id = el.dataset.id;
+      const i = S.selected.indexOf(id);
+      i>=0 ? S.selected.splice(i,1) : S.selected.push(id);
+      render(); break;
+    }
+    case 'decl': S.decl = !S.decl; render(); break;
+    case 'mcls': S.m.cls = el.dataset.v; render(); break;
+    case 'milecls': S.mile.cls = el.dataset.v; render(); break;
+    case 'capture':
+      if (S.scan==='busy') break;
+      S.scan='busy'; render();
+      setTimeout(()=>{ S.scan='idle'; go('ocr'); }, 1600);
+      break;
+    case 'saveOcr': go('expenses', false); S.stack=[]; toast('Expense saved · within policy'); break;
+    case 'draftSave': back(); toast('Draft saved'); break;
+    case 'saveManual': go('expenses', false); S.stack=[]; toast('Expense saved'); break;
+    case 'saveMileage': go('expenses', false); S.stack=[]; toast(`Mileage saved · ${fmt(Math.round((parseFloat(S.dist)||0)*12))}`); break;
+    case 'saveException': back(); toast('Justification saved — a Partner will co-approve'); break;
+    case 'dropDup': S.removed.push('E-4809'); S.dupResolved=true; S.selected=S.selected.filter(x=>x!=='E-4809'); go('expenses', false); toast('Expense E-4809 discarded'); break;
+    case 'keepDup': S.dupResolved=true; go('expenses', false); toast('Kept · flag and note stay on the audit trail'); break;
+    case 'submitClaim': S.submitted=true; go('claims', false); S.stack=[]; toast('Claim submitted · with R. Deshpande'); break;
+    case 'sheet': S.sheet = el.dataset.v; S.reason=''; render(); break;
+    case 'closeSheet': S.sheet=null; render(); break;
+    case 'confirmSheet': {
+      S.decided = S.sheet; S.sheet=null;
+      go('approvals', false);
+      break;
+    }
+    case 'toastMsg': toast(el.dataset.msg); break;
+  }
+});
+
+document.getElementById('app').addEventListener('input', ev => {
+  const el = ev.target.closest('[data-bind]');
+  if (!el) return;
+  setPath(el.dataset.bind, el.value);
+  // Re-render only when dependent UI must update (counters, totals, disabled states)
+  const live = ['just','m.amount','m.merchant','m.purpose','dist','reason'];
+  if (live.includes(el.dataset.bind)) render();
+});
+document.getElementById('app').addEventListener('change', ev => {
+  const el = ev.target.closest('select[data-bind]');
+  if (el){ setPath(el.dataset.bind, el.value); }
+});
+
+/* mark notifications read when the screen is visited */
+const _go = go;
+go = function(screen, push){
+  if (screen==='notifs') setTimeout(()=>{ S.notifsRead = true; }, 600);
+  _go(screen, push);
+};
+
+render();
+</script>
+</body>
+</html>

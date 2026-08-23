@@ -1,0 +1,203 @@
+// Claim Desk logical/physical model
+// Target persistence: MongoDB. DBML expresses collection relationships and logical types.
+// Monetary fields are integer paise.
+
+Table employees {
+  id objectid [pk]
+  employee_code varchar [unique, not null]
+  mobile_number varchar [unique, not null]
+  email varchar
+  name varchar [not null]
+  status varchar [not null]
+  grade_id objectid
+  department_id objectid
+  branch_id objectid
+  manager_employee_id objectid
+  external_hr_id varchar
+  created_at datetime
+  updated_at datetime
+}
+Ref: employees.manager_employee_id > employees.id
+
+Table clients {
+  id objectid [pk]
+  code varchar [unique]
+  name varchar
+  status varchar
+  external_id varchar
+}
+
+Table engagements {
+  id objectid [pk]
+  code varchar [unique]
+  client_id objectid [not null]
+  name varchar
+  status varchar
+  manager_employee_id objectid
+  partner_employee_id objectid
+  cost_centre_id objectid
+  start_date date
+  end_date date
+}
+Ref: engagements.client_id > clients.id
+Ref: engagements.manager_employee_id > employees.id
+Ref: engagements.partner_employee_id > employees.id
+
+Table expense_categories {
+  id objectid [pk]
+  code varchar [unique]
+  name varchar
+  active boolean
+  default_receipt_required boolean
+}
+
+Table expenses {
+  id objectid [pk]
+  expense_no varchar [unique]
+  employee_id objectid [not null]
+  capture_mode varchar [not null]
+  merchant varchar
+  expense_date date [not null]
+  category_id objectid [not null]
+  amount_paise bigint [not null]
+  currency varchar [not null]
+  classification varchar [not null]
+  client_id objectid
+  engagement_id objectid
+  business_purpose text
+  state varchar [not null]
+  claim_id objectid
+  version int
+  created_at datetime
+  updated_at datetime
+}
+Ref: expenses.employee_id > employees.id
+Ref: expenses.category_id > expense_categories.id
+Ref: expenses.client_id > clients.id
+Ref: expenses.engagement_id > engagements.id
+
+Table receipts {
+  id objectid [pk]
+  expense_id objectid [not null]
+  blob_key varchar [not null]
+  file_name varchar
+  mime_type varchar
+  size_bytes bigint
+  sha256 varchar
+  upload_status varchar
+  created_at datetime
+}
+Ref: receipts.expense_id > expenses.id
+
+Table policy_definitions {
+  id objectid [pk]
+  policy_code varchar
+  version int
+  priority int
+  effective_from datetime
+  effective_to datetime
+  status varchar
+  conditions json
+  actions json
+}
+
+Table policy_evaluations {
+  id objectid [pk]
+  expense_id objectid [not null]
+  evaluated_at datetime
+  policy_version_ids json
+  context_snapshot json
+  results json
+  overall_outcome varchar
+}
+Ref: policy_evaluations.expense_id > expenses.id
+
+Table claims {
+  id objectid [pk]
+  claim_no varchar [unique, not null]
+  employee_id objectid [not null]
+  title varchar
+  expense_ids json
+  total_paise bigint
+  currency varchar
+  status varchar
+  declaration_accepted_at datetime
+  submitted_at datetime
+  policy_snapshot json
+  workflow_snapshot json
+  current_stage_index int
+  version int
+  created_at datetime
+  updated_at datetime
+}
+Ref: claims.employee_id > employees.id
+Ref: expenses.claim_id > claims.id
+
+Table approval_tasks {
+  id objectid [pk]
+  claim_id objectid [not null]
+  stage_index int
+  stage_code varchar
+  assigned_approver_id objectid [not null]
+  original_approver_id objectid
+  status varchar
+  due_at datetime
+  decision varchar
+  reason text
+  acted_at datetime
+  version int
+}
+Ref: approval_tasks.claim_id > claims.id
+Ref: approval_tasks.assigned_approver_id > employees.id
+
+Table finance_reviews {
+  id objectid [pk]
+  claim_id objectid [not null]
+  reviewer_id objectid [not null]
+  status varchar
+  gl_assignments json
+  gst_review json
+  notes text
+  verified_at datetime
+}
+Ref: finance_reviews.claim_id > claims.id
+Ref: finance_reviews.reviewer_id > employees.id
+
+Table payment_batches {
+  id objectid [pk]
+  batch_no varchar [unique]
+  status varchar
+  claim_ids json
+  total_paise bigint
+  payment_method varchar
+  external_batch_id varchar
+  created_by objectid
+  created_at datetime
+  processed_at datetime
+}
+
+Table payments {
+  id objectid [pk]
+  claim_id objectid [not null]
+  payment_batch_id objectid
+  amount_paise bigint
+  status varchar
+  reference varchar
+  paid_at datetime
+}
+Ref: payments.claim_id > claims.id
+Ref: payments.payment_batch_id > payment_batches.id
+
+Table audit_events {
+  id objectid [pk]
+  event_id varchar [unique]
+  event_name varchar
+  entity_type varchar
+  entity_id objectid
+  actor json
+  occurred_at datetime
+  correlation_id varchar
+  payload json
+  before json
+  after json
+}
