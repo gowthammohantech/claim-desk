@@ -1,15 +1,11 @@
-/**
- * MasterData module composition root.
- *
- * Builds the concrete adapters, injects them into the use cases, and exposes
- * the router plus any job handlers the module contributes.
- */
-export interface MasterDataModuleDeps {
-  // TODO: inject the logger, config and repositories this module needs.
-  _placeholder?: never;
+import type { MasterDataRepository } from './application/ports/masterDataRepository.js';
+import { createMongoMasterDataRepository } from './infrastructure/mongoMasterDataRepository.js';
+
+/** Owns `clients`, `engagements`, `expenseCategories` and `roles`. */
+export interface MasterDataModule {
+  masterData: MasterDataRepository;
 }
 
-export function buildMasterDataModule(_deps: MasterDataModuleDeps = {}): Record<string, never> {
-  // TODO: return { router, jobHandlers, subscribers }.
-  return {};
+export function buildMasterDataModule(): MasterDataModule {
+  return { masterData: createMongoMasterDataRepository() };
 }

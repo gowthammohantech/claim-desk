@@ -30,6 +30,21 @@ export function errorHandler(logger: AppLogger): ErrorRequestHandler {
       return;
     }
 
+    /*
+     * A database that is down is an availability problem, not a bug. Rendering
+     * it as 503 tells the caller to retry; a blanket 500 tells them the request
+     * itself was wrong, which sends them debugging the wrong thing.
+     */
+    if (isDatabaseUnavailable(error)) {
+      logger.error({ err: error }, 'request.dependency_unavailable');
+      res.status(503).json({
+        code: ErrorCode.DEPENDENCY_UNAVAILABLE,
+        message: 'A required service is temporarily unavailable. Please retry.',
+        ...(correlationId ? { correlationId } : {}),
+      });
+      return;
+    }
+
     logger.error({ err: error }, 'request.unhandled_error');
     res.status(500).json({
       code: ErrorCode.INTERNAL_ERROR,
@@ -37,6 +52,25 @@ export function errorHandler(logger: AppLogger): ErrorRequestHandler {
       ...(correlationId ? { correlationId } : {}),
     });
   };
+}
+
+/**
+ * Recognises the errors Mongoose raises when there is no usable connection.
+ * `bufferCommands: false` makes these immediate rather than a 10s hang.
+ */
+function isDatabaseUnavailable(error: unknown): boolean {
+  if (typeof error !== 'object' || error === null) return false;
+  const name = (error as { name?: string }).name ?? '';
+  const message = (error as { message?: string }).message ?? '';
+  return (
+    name === 'MongooseServerSelectionError' ||
+    name === 'MongoNetworkError' ||
+    name === 'MongoNotConnectedError' ||
+    message.includes('Client must be connected') ||
+    message.includes('buffering timed out') ||
+    // What Mongoose raises with `bufferCommands: false` and no connection.
+    message.includes('before initial connection is complete')
+  );
 }
 
 /** 404 in the same envelope, so clients only ever parse one error shape. */

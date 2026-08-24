@@ -1,7 +1,13 @@
-/**
- * Policy use cases.
- *
- * One file per use case, each a factory that takes its ports as arguments and
- * returns the callable. That keeps them unit-testable without a database.
- */
-export {};
+export {
+  type EvaluatableExpense,
+  type EvaluationSummary,
+  type PolicyContextExtras,
+  type PolicyService,
+  type PolicyServiceDeps,
+  createPolicyService,
+} from './policyService.js';
+export type {
+  DuplicateCaseRecord,
+  PersistEvaluationInput,
+  PolicyRepository,
+} from './ports/index.js';

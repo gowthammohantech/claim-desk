@@ -1,10 +1,23 @@
-/**
- * Policy — public surface.
- *
- * Policy rule evaluation and duplicate scoring. BACKEND ONLY — design/09 §1 forbids shipping firm policy to clients.
- * Owns the `policyDefinitions`, `policyEvaluations` collections.
- *
- * This file is the ONLY thing another module may import. Reaching into
- * `../policy/application/...` from a sibling is a lint error.
- */
-export { type PolicyModuleDeps, buildPolicyModule } from './policy.module.js';
+export { type PolicyModule, type PolicyModuleDeps, buildPolicyModule } from './policy.module.js';
+export type {
+  EvaluatableExpense,
+  EvaluationSummary,
+  PolicyContextExtras,
+  PolicyService,
+} from './application/index.js';
+export {
+  type DuplicateCandidate,
+  type DuplicateScore,
+  type EvaluationPhase,
+  type PolicyContext,
+  type PolicyDefinition,
+  type PolicyRuleResult,
+  type RequiredExtraStage,
+  DUPLICATE_THRESHOLD,
+  KNOWN_FIELD_PATHS,
+  evaluatePolicies,
+  findDuplicates,
+  isKnownFieldPath,
+  normalizeMerchant,
+  scoreDuplicate,
+} from './domain/index.js';

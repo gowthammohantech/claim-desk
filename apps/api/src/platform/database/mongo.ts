@@ -25,6 +25,30 @@ export function mongoStatus(): MongoStatus {
 }
 
 export async function connectMongo(env: Env, logger: AppLogger): Promise<MongoStatus> {
+  mongoose.set('strictQuery', true);
+
+  /*
+   * Index creation is a DEPLOYMENT step, never a side effect of the first query
+   * (requirements/TDD.md §29: migrations and index creation are controlled in
+   * the deployment workflow, not run from developer machines).
+   *
+   * Mongoose defaults `autoIndex` to true, which would silently build indexes
+   * on first use — in production, outside any migration, holding locks on a
+   * live collection. `autoCreate` does the same for collections.
+   */
+  mongoose.set('autoIndex', false);
+  mongoose.set('autoCreate', false);
+
+  /*
+   * Fail fast instead of buffering.
+   *
+   * By default Mongoose queues queries while disconnected and only rejects
+   * after 10s, so a request against a down database hangs long enough to look
+   * like a deadlock and to exhaust the client's timeout first. Throwing
+   * immediately turns that into a clean 503 the caller can act on.
+   */
+  mongoose.set('bufferCommands', false);
+
   if (!env.MONGODB_URI) {
     logger.warn(
       { reason: 'MONGODB_URI not set' },
@@ -33,8 +57,6 @@ export async function connectMongo(env: Env, logger: AppLogger): Promise<MongoSt
     status = 'skipped';
     return status;
   }
-
-  mongoose.set('strictQuery', true);
 
   try {
     await mongoose.connect(env.MONGODB_URI, {

@@ -1,7 +1,15 @@
-/**
- * Auth use cases.
- *
- * One file per use case, each a factory that takes its ports as arguments and
- * returns the callable. That keeps them unit-testable without a database.
- */
-export {};
+export {
+  type AuthService,
+  type AuthServiceDeps,
+  type TokenPairResult,
+  createAuthService,
+  resolvePermissionsFromRoles,
+  toActor,
+} from './authService.js';
+export type {
+  OtpChallenge,
+  OtpChallengeRepository,
+  OtpSender,
+  RefreshTokenRepository,
+  StoredRefreshToken,
+} from './ports/index.js';

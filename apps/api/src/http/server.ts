@@ -1,18 +1,11 @@
 import type { Server } from 'node:http';
 
-import type { Env } from '../platform/config/index.js';
 import { disconnectMongo } from '../platform/database/index.js';
-import type { AppLogger } from '../platform/observability/logger.js';
-import { createApp } from './app.js';
+import { type AppDeps, createApp } from './app.js';
 
 const SHUTDOWN_GRACE_MS = 10_000;
 
-export interface StartServerDeps {
-  env: Env;
-  logger: AppLogger;
-  version: string;
-  startedAtMs: number;
-}
+export type StartServerDeps = AppDeps;
 
 /**
  * Starts the HTTP server and installs a graceful shutdown.

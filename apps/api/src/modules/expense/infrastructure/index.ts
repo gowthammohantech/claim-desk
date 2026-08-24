@@ -1,8 +1,2 @@
-/**
- * Expense infrastructure.
- *
- * Owns the `expenses`, `duplicateCases` collections.
- * Mongoose schemas and repository implementations live here and NOWHERE else.
- * Collection names and indexes come from design/04-data-model.md.
- */
-export {};
+export { type ExpenseDoc, type MileageSubDoc, ExpenseModel } from './expense.model.js';
+export { createMongoExpenseRepository, toExpense } from './mongoExpenseRepository.js';

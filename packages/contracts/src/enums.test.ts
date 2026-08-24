@@ -26,6 +26,15 @@ describe('contract enum sizes match the design docs', () => {
     ['JobType', c.JOB_TYPES, 8, 'requirements/TDD.md §14'],
     ['EntityType', c.ENTITY_TYPES, 12, 'design/10-audit-event-catalog.md §2'],
     ['Currency', c.CURRENCIES, 1, 'gaps.md GAP-019 (INR only)'],
+    // Added when the contract was extended to close its documented gaps.
+    ['PolicyActionTrigger', c.POLICY_ACTION_TRIGGERS, 2, 'design/09 §5 vs §2 reconciliation'],
+    ['DefinitionStatus', c.DEFINITION_STATUSES, 3, 'policy/workflow version lifecycle'],
+    ['JobStatus', c.JOB_STATUSES, 5, 'design/11 §8 (DEAD_LETTER needs Admin retry)'],
+    ['OutboxStatus', c.OUTBOX_STATUSES, 3, 'ADR-009'],
+    ['PaymentStatus', c.PAYMENT_STATUSES, 4, 'design/10 §2 payment events'],
+    ['PaymentBatchStatus', c.PAYMENT_BATCH_STATUSES, 4, 'design/04 paymentBatches'],
+    ['DuplicateCaseStatus', c.DUPLICATE_CASE_STATUSES, 2, 'design/09 §10'],
+    ['NotificationChannel', c.NOTIFICATION_CHANNELS, 1, 'gaps.md GAP-008 (push only)'],
   ];
 
   it.each(cases)('%s has %i members (%s)', (_name, values, expected) => {

@@ -1,6 +1,7 @@
+import { buildContainer } from './container.js';
 import { startHttpServer } from './http/server.js';
 import { assertProductionReady, loadEnv } from './platform/config/index.js';
-import { connectMongo } from './platform/database/index.js';
+import { connectMongo, disconnectMongo, runMigrations } from './platform/database/index.js';
 import { createLogger } from './platform/observability/index.js';
 import { startWorker } from './worker/runner.js';
 
@@ -46,17 +47,29 @@ async function main(): Promise<void> {
     }
 
     case 'migrate': {
+      if (!env.MONGODB_URI) {
+        logger.fatal('migrate.no_database — set MONGODB_URI');
+        process.exit(1);
+      }
+
       logger.info('migrate.started');
-      // TODO(migrations): run platform/database/migrations/runner.ts, then
-      // apply the index specs from design/04-data-model.md §4.
-      logger.warn('migrate.no_migrations_defined');
-      logger.info('migrate.completed');
+      const { applied } = await runMigrations(logger);
+      logger.info({ applied }, 'migrate.completed');
+      await disconnectMongo();
       process.exit(0);
       break;
     }
 
     default: {
-      startHttpServer({ env, logger, version: VERSION, startedAtMs });
+      const container = buildContainer(env, logger);
+      startHttpServer({
+        env,
+        logger,
+        version: VERSION,
+        startedAtMs,
+        routers: container.routers,
+        authenticate: container.authenticate,
+      });
     }
   }
 }

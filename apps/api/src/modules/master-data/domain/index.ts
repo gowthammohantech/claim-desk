@@ -1,10 +1,7 @@
-/**
- * MasterData domain.
- *
- * Backend-maintained master data: clients, engagements, expense categories.
- *
- * PURE: no I/O, no Mongoose, no Express, no Node built-ins. Entities,
- * value objects and invariants only. Enforced by eslint-plugin-boundaries
- * plus the SDK ban in @claimdesk/config-eslint/api-boundaries.
- */
-export {};
+export {
+  type Client,
+  type Engagement,
+  type ExpenseCategory,
+  type Role,
+  isSelectable,
+} from './masterData.js';

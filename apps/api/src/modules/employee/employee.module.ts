@@ -1,15 +1,16 @@
+import type { EmployeeRepository } from './application/ports/employeeRepository.js';
+import { createMongoEmployeeRepository } from './infrastructure/mongoEmployeeRepository.js';
+
 /**
- * Employee module composition root.
+ * Employee module. Owns `employees` and `roles`.
  *
- * Builds the concrete adapters, injects them into the use cases, and exposes
- * the router plus any job handlers the module contributes.
+ * Master data is maintained manually from the backend — there is no HR
+ * integration in scope (design/11 §2).
  */
-export interface EmployeeModuleDeps {
-  // TODO: inject the logger, config and repositories this module needs.
-  _placeholder?: never;
+export interface EmployeeModule {
+  employees: EmployeeRepository;
 }
 
-export function buildEmployeeModule(_deps: EmployeeModuleDeps = {}): Record<string, never> {
-  // TODO: return { router, jobHandlers, subscribers }.
-  return {};
+export function buildEmployeeModule(): EmployeeModule {
+  return { employees: createMongoEmployeeRepository() };
 }

@@ -4,6 +4,172 @@
  */
 
 export interface paths {
+    "/admin/jobs": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Operational view of the background queue. Defaults to dead-lettered jobs, which design/11 §8 requires an Admin to be able to find and retry. */
+        get: operations["listJobs"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/jobs/{jobId}/retry": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Requeues a dead-lettered job, resetting attempts and clearing the lease. Integration events are never silently dropped (design/11 §8). */
+        post: operations["retryJob"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/master/{collection}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Master data is maintained manually from the backend (design/11 §2, §3) — there is no HR or client-directory integration in scope. */
+        get: operations["listMasterData"];
+        put?: never;
+        post: operations["createMasterDataRecord"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/master/{collection}/{recordId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["updateMasterDataRecord"];
+        trace?: never;
+    };
+    "/admin/policies": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listPolicyDefinitions"];
+        put?: never;
+        /** @description Creates a new DRAFT version. Published versions are immutable. */
+        post: operations["createPolicyDefinition"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/policies/{policyId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getPolicyDefinition"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        /** @description Only a DRAFT version may be edited. */
+        patch: operations["updatePolicyDefinition"];
+        trace?: never;
+    };
+    "/admin/policies/{policyId}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Publishes the draft, making it immutable and effective from its effectiveFrom. Emits policy.version_published. */
+        post: operations["publishPolicyDefinition"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/workflows": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["listWorkflowDefinitions"];
+        put?: never;
+        post: operations["createWorkflowDefinition"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/admin/workflows/{workflowId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get: operations["getWorkflowDefinition"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch: operations["updateWorkflowDefinition"];
+        trace?: never;
+    };
+    "/admin/workflows/{workflowId}/publish": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post: operations["publishWorkflowDefinition"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/approvals": {
         parameters: {
             query?: never;
@@ -36,6 +202,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/auth/logout": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Revokes the presented refresh token. */
+        post: operations["logout"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/auth/otp/request": {
         parameters: {
             query?: never;
@@ -62,6 +245,23 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["verifyOtp"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/auth/refresh": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** @description Exchanges a refresh token for a new pair. Refresh tokens are single-use and rotate on every call; presenting a already-used token revokes the whole chain. */
+        post: operations["refreshTokens"];
         delete?: never;
         options?: never;
         head?: never;
@@ -161,6 +361,7 @@ export interface paths {
         delete: operations["deleteDraftExpense"];
         options?: never;
         head?: never;
+        /** @description Replaces the editable fields of an expense. `version` is the optimistic concurrency token from the last read; a mismatch returns 409 rather than silently overwriting a concurrent edit. */
         patch: operations["updateExpense"];
         trace?: never;
     };
@@ -238,6 +439,23 @@ export interface paths {
         get?: never;
         put?: never;
         post: operations["verifyClaim"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/health": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** @description Liveness and dependency snapshot. Documented because design/13-test-strategy.md forbids undocumented production endpoints. */
+        get: operations["getHealth"];
+        put?: never;
+        post?: never;
         delete?: never;
         options?: never;
         head?: never;
@@ -401,6 +619,23 @@ export interface components {
             totalPaise: number;
             version: number;
         };
+        /** @enum {unknown} */
+        DefinitionStatus: "DRAFT" | "PUBLISHED" | "ARCHIVED";
+        DuplicateCase: {
+            candidateExpenseId: string;
+            expenseId: string;
+            id: string;
+            reasons?: string[];
+            /** @enum {unknown} */
+            resolution?: "DISCARD" | "KEEP";
+            resolutionReason?: string;
+            /** Format: date-time */
+            resolvedAt?: string;
+            resolvedBy?: string;
+            score: number;
+            /** @enum {unknown} */
+            status: "OPEN" | "RESOLVED";
+        };
         Employee: {
             branch?: string;
             department?: string;
@@ -458,21 +693,248 @@ export interface components {
             mileage?: components["schemas"]["Mileage"];
             receiptIds?: string[];
         };
+        ExpenseUpdate: components["schemas"]["ExpenseInput"] & {
+            /** @description Optimistic concurrency token from the last read. */
+            version: number;
+        };
+        /** @description Accounting fields Finance may maintain (requirements/03-FRD.md FR-FIN-003). `reimbursablePaise` is what actually gets paid and may differ from the claimed amount, which is why the payment amount is taken from the review rather than from the claim. */
+        FinanceVerifyInput: {
+            glAssignments?: {
+                costCentreId?: string;
+                expenseId: string;
+                glCode?: string;
+                reimbursablePaise?: number;
+                taxCode?: string;
+            }[];
+            gstReview?: {
+                [key: string]: unknown;
+            };
+            notes?: string;
+        };
+        HealthReport: {
+            checks?: {
+                [key: string]: "ok" | "degraded" | "down" | "skipped";
+            };
+            role: string;
+            /** @enum {unknown} */
+            status: "ok" | "degraded" | "down";
+            uptimeSec: number;
+            version: string;
+        };
+        Job: {
+            attempts: number;
+            /** Format: date-time */
+            availableAt?: string;
+            correlationId?: string;
+            /** Format: date-time */
+            createdAt?: string;
+            id: string;
+            lastError?: string;
+            /** Format: date-time */
+            lockedAt?: string;
+            maxAttempts?: number;
+            status: components["schemas"]["JobStatus"];
+            type: string;
+        };
+        /** @enum {unknown} */
+        JobStatus: "PENDING" | "RUNNING" | "COMPLETED" | "FAILED" | "DEAD_LETTER";
         Mileage: {
             destination?: string;
             distanceKm?: number;
             origin?: string;
             ratePaisePerKm?: number;
         };
-        PolicyEvaluation: {
+        /** @description Indian mobile number, with or without the +91 prefix. Mobile number maps to exactly one active employee (design/11-integration-spec.md §2). */
+        MobileNumber: string;
+        Notification: {
+            body?: string;
+            /** @description Push is the only channel in the current scope (gaps.md GAP-008). */
+            channels?: "PUSH"[];
+            /** Format: date-time */
+            createdAt: string;
+            entityId?: string;
+            entityType?: string;
+            id: string;
+            /** Format: date-time */
+            readAt?: string;
+            title: string;
+            type: string;
+        };
+        Payment: {
+            amountPaise: number;
+            claimId: string;
+            failureCode?: string;
+            failureMessage?: string;
+            id: string;
+            /** Format: date-time */
+            paidAt?: string;
+            paymentBatchId?: string;
+            reference?: string;
             /** @enum {unknown} */
-            overallOutcome?: "PASS" | "WARNING" | "EXCEPTION_REQUIRES_JUSTIFICATION" | "BLOCKED";
-            results?: Record<string, never>[];
+            status: "PENDING" | "PROCESSING" | "PAID" | "FAILED";
+        };
+        PaymentBatch: {
+            batchNo: string;
+            claimIds: string[];
+            /** Format: date-time */
+            createdAt?: string;
+            createdBy?: string;
+            externalBatchId?: string;
+            id: string;
+            paymentMethod?: string;
+            /** Format: date-time */
+            processedAt?: string;
+            /** @enum {unknown} */
+            status: "OPEN" | "PROCESSING" | "COMPLETED" | "FAILED";
+            totalPaise: number;
+        };
+        PolicyCondition: {
+            all: {
+                /** @description Dot path into the evaluation context, e.g. category.code */
+                field: string;
+                /** @enum {unknown} */
+                op: "EQ" | "NE" | "IN" | "NOT_IN" | "GT" | "GTE" | "LT" | "LTE" | "EXISTS" | "BETWEEN";
+                value?: unknown;
+            }[];
+        };
+        PolicyDefinition: components["schemas"]["PolicyDefinitionInput"] & {
+            approvedBy?: string;
+            createdBy?: string;
+            id: string;
+            status: components["schemas"]["DefinitionStatus"];
+            /** @description Published version number, NOT an optimistic-concurrency counter. */
+            version: number;
+        };
+        PolicyDefinitionInput: {
+            actions: {
+                [key: string]: unknown;
+            }[];
+            conditions: components["schemas"]["PolicyCondition"];
+            /** Format: date-time */
+            effectiveFrom: string;
+            /** Format: date-time */
+            effectiveTo?: string;
+            /** @description Marks a mandatory legal or firm control — precedence level 2, above rule specificity and priority. */
+            mandatoryControl?: boolean;
+            name: string;
+            policyCode: string;
+            /** @description Higher wins (design/09 §6 level 4). */
+            priority: number;
+        };
+        PolicyEvaluation: {
+            addedApprovalStages?: string[];
+            /** Format: date-time */
+            evaluatedAt?: string;
+            expenseId?: string;
+            id?: string;
+            overallOutcome: components["schemas"]["PolicyOutcome"];
+            policyVersionIds?: string[];
+            requiresJustification?: boolean;
+            results?: components["schemas"]["PolicyRuleResult"][];
+        };
+        /** @enum {unknown} */
+        PolicyOutcome: "PASS" | "WARNING" | "EXCEPTION_REQUIRES_JUSTIFICATION" | "BLOCKED";
+        /** @description One matched policy rule and what it produced. */
+        PolicyRuleResult: {
+            actions?: {
+                amountPaise?: number;
+                basis?: string;
+                message?: string;
+                /**
+                 * @description When the action fires. ALWAYS by default; EXCEED means only when a LIMIT on the same rule was breached. This reconciles design/09 §5's action list with the §2 example's REQUIRE_JUSTIFICATION_ON_EXCEED spelling.
+                 * @enum {unknown}
+                 */
+                on?: "ALWAYS" | "EXCEED";
+                resolver?: string;
+                /** @enum {unknown} */
+                type: "ALLOW" | "BLOCK" | "WARN" | "REQUIRE_RECEIPT" | "LIMIT" | "REQUIRE_JUSTIFICATION" | "MARK_EXCEPTION" | "ADD_APPROVAL_STAGE" | "SET_MILEAGE_RATE";
+            }[];
+            /** @description The applicable limit, when the rule set one. */
+            limitPaise?: number;
+            message?: string;
+            outcome: components["schemas"]["PolicyOutcome"];
+            /** @description amountPaise minus limitPaise, when positive. */
+            overagePaise?: number;
+            policyCode: string;
+            policyDefinitionId?: string;
+            policyVersion: number;
+        };
+        TokenPair: {
+            accessToken: string;
+            employee: components["schemas"]["Employee"];
+            /** @description Access token lifetime in seconds. */
+            expiresIn: number;
+            /** @description Single-use. Rotates on every refresh and is stored hashed so it can be revoked before expiry. */
+            refreshToken: string;
+        };
+        WorkflowDefinition: components["schemas"]["WorkflowDefinitionInput"] & {
+            id: string;
+            status: components["schemas"]["DefinitionStatus"];
+            /** @description Published version number, NOT a concurrency counter. */
+            version: number;
+        };
+        WorkflowDefinitionInput: {
+            conditions?: components["schemas"]["PolicyCondition"];
+            /** Format: date-time */
+            effectiveFrom: string;
+            /** Format: date-time */
+            effectiveTo?: string;
+            name: string;
+            /** @description The ₹25,000 baseline from design/08 §3, which the spec requires to be configurable. Lives on the definition so workflowSnapshot captures the value that was actually in force at submission. */
+            partnerApprovalThresholdPaise?: number;
+            priority: number;
+            stages: components["schemas"]["WorkflowStage"][];
+            workflowCode: string;
+        };
+        WorkflowStage: {
+            /** @description Out of scope in the current release (design/08 §9). */
+            allowDelegation?: boolean;
+            /** @enum {unknown} */
+            approverResolver: "REPORTING_MANAGER" | "ENGAGEMENT_MANAGER" | "ENGAGEMENT_PARTNER" | "NAMED_ROLE" | "NAMED_EMPLOYEE";
+            decisionOptions?: ("APPROVE" | "RETURN" | "REJECT")[];
+            escalation?: {
+                [key: string]: unknown;
+            };
+            permission?: string;
+            required?: boolean;
+            /** @description Role code or employee id, for NAMED_ROLE / NAMED_EMPLOYEE. */
+            resolverValue?: string;
+            sequence: number;
+            /** @description Out of scope in the current release (design/08 §8). */
+            slaHours?: number;
+            stageCode: string;
         };
     };
     responses: {
         /** @description State/version conflict */
         Conflict: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+        /** @description Authenticated but not permitted. Covers segregation-of-duties refusals (design/07-permission-matrix.md §4) as well as missing permissions. */
+        Forbidden: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+        /** @description Too many requests */
+        RateLimited: {
+            headers: {
+                [name: string]: unknown;
+            };
+            content: {
+                "application/json": components["schemas"]["Error"];
+            };
+        };
+        /** @description Missing, expired or invalid credentials */
+        Unauthorized: {
             headers: {
                 [name: string]: unknown;
             };
@@ -494,6 +956,10 @@ export interface components {
         ClaimId: string;
         ExpenseId: string;
         IdempotencyKey: string;
+        JobId: string;
+        MasterCollection: "employees" | "clients" | "engagements" | "expenseCategories" | "roles";
+        PolicyId: string;
+        WorkflowId: string;
     };
     requestBodies: never;
     headers: never;
@@ -501,20 +967,426 @@ export interface components {
 }
 export type SchemaApprovalTask = components['schemas']['ApprovalTask'];
 export type SchemaClaim = components['schemas']['Claim'];
+export type SchemaDefinitionStatus = components['schemas']['DefinitionStatus'];
+export type SchemaDuplicateCase = components['schemas']['DuplicateCase'];
 export type SchemaEmployee = components['schemas']['Employee'];
 export type SchemaEngagement = components['schemas']['Engagement'];
 export type SchemaError = components['schemas']['Error'];
 export type SchemaExpense = components['schemas']['Expense'];
 export type SchemaExpenseInput = components['schemas']['ExpenseInput'];
+export type SchemaExpenseUpdate = components['schemas']['ExpenseUpdate'];
+export type SchemaFinanceVerifyInput = components['schemas']['FinanceVerifyInput'];
+export type SchemaHealthReport = components['schemas']['HealthReport'];
+export type SchemaJob = components['schemas']['Job'];
+export type SchemaJobStatus = components['schemas']['JobStatus'];
 export type SchemaMileage = components['schemas']['Mileage'];
+export type SchemaMobileNumber = components['schemas']['MobileNumber'];
+export type SchemaNotification = components['schemas']['Notification'];
+export type SchemaPayment = components['schemas']['Payment'];
+export type SchemaPaymentBatch = components['schemas']['PaymentBatch'];
+export type SchemaPolicyCondition = components['schemas']['PolicyCondition'];
+export type SchemaPolicyDefinition = components['schemas']['PolicyDefinition'];
+export type SchemaPolicyDefinitionInput = components['schemas']['PolicyDefinitionInput'];
 export type SchemaPolicyEvaluation = components['schemas']['PolicyEvaluation'];
+export type SchemaPolicyOutcome = components['schemas']['PolicyOutcome'];
+export type SchemaPolicyRuleResult = components['schemas']['PolicyRuleResult'];
+export type SchemaTokenPair = components['schemas']['TokenPair'];
+export type SchemaWorkflowDefinition = components['schemas']['WorkflowDefinition'];
+export type SchemaWorkflowDefinitionInput = components['schemas']['WorkflowDefinitionInput'];
+export type SchemaWorkflowStage = components['schemas']['WorkflowStage'];
 export type ResponseConflict = components['responses']['Conflict'];
+export type ResponseForbidden = components['responses']['Forbidden'];
+export type ResponseRateLimited = components['responses']['RateLimited'];
+export type ResponseUnauthorized = components['responses']['Unauthorized'];
 export type ResponseValidationError = components['responses']['ValidationError'];
 export type ParameterClaimId = components['parameters']['ClaimId'];
 export type ParameterExpenseId = components['parameters']['ExpenseId'];
 export type ParameterIdempotencyKey = components['parameters']['IdempotencyKey'];
+export type ParameterJobId = components['parameters']['JobId'];
+export type ParameterMasterCollection = components['parameters']['MasterCollection'];
+export type ParameterPolicyId = components['parameters']['PolicyId'];
+export type ParameterWorkflowId = components['parameters']['WorkflowId'];
 export type $defs = Record<string, never>;
 export interface operations {
+    listJobs: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["JobStatus"];
+                type?: string;
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Jobs */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Job"][];
+                };
+            };
+        };
+    };
+    retryJob: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                jobId: components["parameters"]["JobId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Requeued */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["Job"];
+                };
+            };
+            409: components["responses"]["Conflict"];
+        };
+    };
+    listMasterData: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                collection: components["parameters"]["MasterCollection"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Records */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    }[];
+                };
+            };
+        };
+    };
+    createMasterDataRecord: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                collection: components["parameters"]["MasterCollection"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    updateMasterDataRecord: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                collection: components["parameters"]["MasterCollection"];
+                recordId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    [key: string]: unknown;
+                };
+            };
+        };
+        responses: {
+            /** @description Updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": {
+                        [key: string]: unknown;
+                    };
+                };
+            };
+            409: components["responses"]["Conflict"];
+        };
+    };
+    listPolicyDefinitions: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["DefinitionStatus"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Policy definitions */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PolicyDefinition"][];
+                };
+            };
+        };
+    };
+    createPolicyDefinition: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PolicyDefinitionInput"];
+            };
+        };
+        responses: {
+            /** @description Draft policy version */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PolicyDefinition"];
+                };
+            };
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    getPolicyDefinition: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                policyId: components["parameters"]["PolicyId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Policy definition */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PolicyDefinition"];
+                };
+            };
+        };
+    };
+    updatePolicyDefinition: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                policyId: components["parameters"]["PolicyId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["PolicyDefinitionInput"];
+            };
+        };
+        responses: {
+            /** @description Updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PolicyDefinition"];
+                };
+            };
+            409: components["responses"]["Conflict"];
+        };
+    };
+    publishPolicyDefinition: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                policyId: components["parameters"]["PolicyId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Published */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["PolicyDefinition"];
+                };
+            };
+            409: components["responses"]["Conflict"];
+        };
+    };
+    listWorkflowDefinitions: {
+        parameters: {
+            query?: {
+                status?: components["schemas"]["DefinitionStatus"];
+            };
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Workflow definitions */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkflowDefinition"][];
+                };
+            };
+        };
+    };
+    createWorkflowDefinition: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkflowDefinitionInput"];
+            };
+        };
+        responses: {
+            /** @description Draft workflow version */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkflowDefinition"];
+                };
+            };
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    getWorkflowDefinition: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workflowId: components["parameters"]["WorkflowId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Workflow definition */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkflowDefinition"];
+                };
+            };
+        };
+    };
+    updateWorkflowDefinition: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                workflowId: components["parameters"]["WorkflowId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["WorkflowDefinitionInput"];
+            };
+        };
+        responses: {
+            /** @description Updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkflowDefinition"];
+                };
+            };
+            409: components["responses"]["Conflict"];
+        };
+    };
+    publishWorkflowDefinition: {
+        parameters: {
+            query?: never;
+            header: {
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
+            path: {
+                workflowId: components["parameters"]["WorkflowId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Published */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["WorkflowDefinition"];
+                };
+            };
+            409: components["responses"]["Conflict"];
+        };
+    };
     listAssignedApprovals: {
         parameters: {
             query?: never;
@@ -551,7 +1423,9 @@ export interface operations {
                 "application/json": {
                     /** @enum {unknown} */
                     decision: "APPROVE" | "RETURN" | "REJECT";
+                    /** @description Mandatory for RETURN and REJECT, optional for APPROVE (design/08-workflow-spec.md §7). */
                     reason?: string;
+                    /** @description The task version last read. First valid terminal decision wins; a stale version returns 409 (§10). */
                     version: number;
                 };
             };
@@ -562,9 +1436,36 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["ApprovalTask"];
+                };
             };
             409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    logout: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    refreshToken: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Logged out */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
         };
     };
     requestOtp: {
@@ -577,7 +1478,7 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    mobileNumber: string;
+                    mobileNumber: components["schemas"]["MobileNumber"];
                 };
             };
         };
@@ -589,6 +1490,7 @@ export interface operations {
                 };
                 content?: never;
             };
+            429: components["responses"]["RateLimited"];
         };
     };
     verifyOtp: {
@@ -601,7 +1503,7 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
-                    mobileNumber: string;
+                    mobileNumber: components["schemas"]["MobileNumber"];
                     otp: string;
                 };
             };
@@ -612,8 +1514,39 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["TokenPair"];
+                };
             };
+            401: components["responses"]["Unauthorized"];
+            429: components["responses"]["RateLimited"];
+        };
+    };
+    refreshTokens: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": {
+                    refreshToken: string;
+                };
+            };
+        };
+        responses: {
+            /** @description New token pair */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["TokenPair"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
         };
     };
     listClaims: {
@@ -639,7 +1572,9 @@ export interface operations {
     createClaim: {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
             path?: never;
             cookie?: never;
         };
@@ -844,7 +1779,7 @@ export interface operations {
         };
         requestBody: {
             content: {
-                "application/json": components["schemas"]["ExpenseInput"];
+                "application/json": components["schemas"]["ExpenseUpdate"];
             };
         };
         responses: {
@@ -875,6 +1810,7 @@ export interface operations {
                     /** @enum {unknown} */
                     action: "DISCARD" | "KEEP";
                     candidateExpenseId?: string;
+                    /** @description Mandatory when action is KEEP — design/09-policy-engine-spec.md §10 requires the user to keep a suspected duplicate "with explanation", and the reason is written to the audit log. */
                     reason?: string;
                 };
             };
@@ -885,8 +1821,11 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["Expense"];
+                };
             };
+            422: components["responses"]["ValidationError"];
         };
     };
     evaluateExpense: {
@@ -934,7 +1873,9 @@ export interface operations {
     returnClaimFromFinance: {
         parameters: {
             query?: never;
-            header?: never;
+            header: {
+                "Idempotency-Key": components["parameters"]["IdempotencyKey"];
+            };
             path: {
                 claimId: components["parameters"]["ClaimId"];
             };
@@ -953,8 +1894,11 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["Claim"];
+                };
             };
+            409: components["responses"]["Conflict"];
         };
     };
     verifyClaim: {
@@ -968,14 +1912,51 @@ export interface operations {
             };
             cookie?: never;
         };
-        requestBody?: never;
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["FinanceVerifyInput"];
+            };
+        };
         responses: {
             /** @description Verified */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["Claim"];
+                };
+            };
+            403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    getHealth: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Service healthy or degraded */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HealthReport"];
+                };
+            };
+            /** @description A critical dependency is down */
+            503: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["HealthReport"];
+                };
             };
         };
     };
@@ -1021,7 +2002,9 @@ export interface operations {
     };
     listNotifications: {
         parameters: {
-            query?: never;
+            query?: {
+                unreadOnly?: boolean;
+            };
             header?: never;
             path?: never;
             cookie?: never;
@@ -1033,7 +2016,9 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["Notification"][];
+                };
             };
         };
     };
@@ -1080,8 +2065,12 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["PaymentBatch"];
+                };
             };
+            409: components["responses"]["Conflict"];
+            422: components["responses"]["ValidationError"];
         };
     };
     markPaymentPaid: {
@@ -1110,8 +2099,12 @@ export interface operations {
                 headers: {
                     [name: string]: unknown;
                 };
-                content?: never;
+                content: {
+                    "application/json": components["schemas"]["Payment"];
+                };
             };
+            403: components["responses"]["Forbidden"];
+            409: components["responses"]["Conflict"];
         };
     };
     completeReceiptUpload: {
@@ -1144,8 +2137,13 @@ export interface operations {
         requestBody: {
             content: {
                 "application/json": {
+                    expenseId?: string;
                     fileName: string;
-                    mimeType: string;
+                    /**
+                     * @description ADR-005 limits receipts to PDF, JPEG and PNG. The maximum size is configuration, so it is enforced server-side rather than pinned here.
+                     * @enum {unknown}
+                     */
+                    mimeType: "image/jpeg" | "image/png" | "application/pdf";
                     sizeBytes: number;
                 };
             };

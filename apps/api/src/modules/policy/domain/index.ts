@@ -1,10 +1,26 @@
-/**
- * Policy domain.
- *
- * Policy rule evaluation and duplicate scoring. BACKEND ONLY — design/09 §1 forbids shipping firm policy to clients.
- *
- * PURE: no I/O, no Mongoose, no Express, no Node built-ins. Entities,
- * value objects and invariants only. Enforced by eslint-plugin-boundaries
- * plus the SDK ban in @claimdesk/config-eslint/api-boundaries.
- */
-export {};
+export {
+  type AppliedAction,
+  type EvaluateOptions,
+  type EvaluationPhase,
+  type PolicyAction,
+  type PolicyCondition,
+  type PolicyContext,
+  type PolicyDefinition,
+  type PolicyEvaluationOutput,
+  type PolicyLeafCondition,
+  type PolicyRuleResult,
+  type RequiredExtraStage,
+} from './types.js';
+export { FIELD_PATHS, KNOWN_FIELD_PATHS, isKnownFieldPath, resolveField } from './context.js';
+export { evaluateLeaf, matchesCondition } from './operators.js';
+export { comparePolicies, isEffective, orderByPrecedence, specificityOf } from './precedence.js';
+export { evaluatePolicies } from './evaluator.js';
+export {
+  type DuplicateCandidate,
+  type DuplicateScore,
+  DUPLICATE_THRESHOLD,
+  findDuplicates,
+  isDuplicate,
+  normalizeMerchant,
+  scoreDuplicate,
+} from './duplicates.js';

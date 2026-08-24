@@ -24,7 +24,18 @@ let app: Express;
 beforeAll(() => {
   const env = loadEnv(TEST_ENV);
   const logger = createLogger(env);
-  app = createApp({ env, logger, version: '0.1.0-test', startedAtMs: Date.now() });
+  // No modules mounted: this suite covers the HTTP shell — context, error
+  // envelope, security headers — not any business route.
+  app = createApp({
+    env,
+    logger,
+    version: '0.1.0-test',
+    startedAtMs: Date.now(),
+    routers: { public: [], authenticated: [] },
+    authenticate: (_req, _res, next) => {
+      next();
+    },
+  });
 });
 
 describe('GET /v1/health', () => {

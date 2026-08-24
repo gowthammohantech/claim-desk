@@ -1,10 +1,8 @@
-/**
- * Expense domain.
- *
- * Expense capture, editing and duplicate resolution.
- *
- * PURE: no I/O, no Mongoose, no Express, no Node built-ins. Entities,
- * value objects and invariants only. Enforced by eslint-plugin-boundaries
- * plus the SDK ban in @claimdesk/config-eslint/api-boundaries.
- */
-export {};
+export {
+  type Expense,
+  type Mileage,
+  isDeletable,
+  isEditable,
+  requiresEngagement,
+  toUtcMidnight,
+} from './expense.js';

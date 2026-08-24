@@ -18,6 +18,7 @@ tags:
 - name: Payments
 - name: Notifications
 - name: Admin
+- name: Health
 paths:
   /auth/otp/request:
     post:
@@ -35,10 +36,12 @@ paths:
               - mobileNumber
               properties:
                 mobileNumber:
-                  type: string
+                  $ref: '#/components/schemas/MobileNumber'
       responses:
         '202':
           description: OTP generated/sent using dummy OTP adapter
+        '429':
+          $ref: '#/components/responses/RateLimited'
   /auth/otp/verify:
     post:
       tags:
@@ -56,12 +59,93 @@ paths:
               - otp
               properties:
                 mobileNumber:
-                  type: string
+                  $ref: '#/components/schemas/MobileNumber'
                 otp:
                   type: string
+                  pattern: '^[0-9]{6}$'
       responses:
         '200':
           description: Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenPair'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+  /auth/refresh:
+    post:
+      tags:
+      - Auth
+      operationId: refreshTokens
+      security: []
+      description: >-
+        Exchanges a refresh token for a new pair. Refresh tokens are single-use
+        and rotate on every call; presenting a already-used token revokes the
+        whole chain.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - refreshToken
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        '200':
+          description: New token pair
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TokenPair'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /auth/logout:
+    post:
+      tags:
+      - Auth
+      operationId: logout
+      description: Revokes the presented refresh token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+              - refreshToken
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        '204':
+          description: Logged out
+  /health:
+    get:
+      tags:
+      - Health
+      operationId: getHealth
+      security: []
+      description: >-
+        Liveness and dependency snapshot. Documented because
+        design/13-test-strategy.md forbids undocumented production endpoints.
+      responses:
+        '200':
+          description: Service healthy or degraded
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthReport'
+        '503':
+          description: A critical dependency is down
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthReport'
   /me:
     get:
       tags:
@@ -146,6 +230,10 @@ paths:
       tags:
       - Expenses
       operationId: updateExpense
+      description: >-
+        Replaces the editable fields of an expense. `version` is the optimistic
+        concurrency token from the last read; a mismatch returns 409 rather than
+        silently overwriting a concurrent edit.
       parameters:
       - $ref: '#/components/parameters/ExpenseId'
       requestBody:
@@ -153,7 +241,7 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/ExpenseInput'
+              $ref: '#/components/schemas/ExpenseUpdate'
       responses:
         '200':
           description: Updated
@@ -210,9 +298,20 @@ paths:
                   type: string
                 reason:
                   type: string
+                  minLength: 1
+                  description: >-
+                    Mandatory when action is KEEP — design/09-policy-engine-spec.md
+                    §10 requires the user to keep a suspected duplicate "with
+                    explanation", and the reason is written to the audit log.
       responses:
         '200':
           description: Resolved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Expense'
+        '422':
+          $ref: '#/components/responses/ValidationError'
   /receipts/upload-intent:
     post:
       tags:
@@ -231,10 +330,21 @@ paths:
               properties:
                 fileName:
                   type: string
+                  minLength: 1
                 mimeType:
-                  type: string
+                  description: >-
+                    ADR-005 limits receipts to PDF, JPEG and PNG. The maximum
+                    size is configuration, so it is enforced server-side rather
+                    than pinned here.
+                  enum:
+                  - image/jpeg
+                  - image/png
+                  - application/pdf
                 sizeBytes:
                   type: integer
+                  minimum: 1
+                expenseId:
+                  type: string
       responses:
         '200':
           description: Short-lived upload details
@@ -283,6 +393,8 @@ paths:
       tags:
       - Claims
       operationId: createClaim
+      parameters:
+      - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
         content:
@@ -409,13 +521,27 @@ paths:
                   - REJECT
                 reason:
                   type: string
+                  minLength: 1
+                  description: >-
+                    Mandatory for RETURN and REJECT, optional for APPROVE
+                    (design/08-workflow-spec.md §7).
                 version:
                   type: integer
+                  minimum: 0
+                  description: >-
+                    The task version last read. First valid terminal decision
+                    wins; a stale version returns 409 (§10).
       responses:
         '200':
           description: Decision accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApprovalTask'
         '409':
           $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
   /finance/claims:
     get:
       tags:
@@ -438,9 +564,23 @@ paths:
       parameters:
       - $ref: '#/components/parameters/ClaimId'
       - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FinanceVerifyInput'
       responses:
         '200':
           description: Verified
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Claim'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /finance/claims/{claimId}/return:
     post:
       tags:
@@ -448,6 +588,7 @@ paths:
       operationId: returnClaimFromFinance
       parameters:
       - $ref: '#/components/parameters/ClaimId'
+      - $ref: '#/components/parameters/IdempotencyKey'
       requestBody:
         required: true
         content:
@@ -463,6 +604,12 @@ paths:
       responses:
         '200':
           description: Returned
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Claim'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /payment-batches:
     post:
       tags:
@@ -489,6 +636,14 @@ paths:
       responses:
         '201':
           description: Batch created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentBatch'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
   /payments/{paymentId}/paid:
     post:
       tags:
@@ -513,20 +668,40 @@ paths:
               properties:
                 reference:
                   type: string
+                  minLength: 1
                 paidAt:
                   type: string
                   format: date-time
       responses:
         '200':
           description: Paid
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /notifications:
     get:
       tags:
       - Notifications
       operationId: listNotifications
+      parameters:
+      - in: query
+        name: unreadOnly
+        schema:
+          type: boolean
       responses:
         '200':
           description: Notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Notification'
   /notifications/{notificationId}/read:
     post:
       tags:
@@ -541,6 +716,301 @@ paths:
       responses:
         '204':
           description: Read
+
+  # ─── Admin ────────────────────────────────────────────────────────────────
+  # The Admin tag was declared from the start but carried no operations, which
+  # left `policy:manage`, `workflow:manage` and `master:manage` unreachable and
+  # made design/11-integration-spec.md §8's required "Admin retry" for poison
+  # jobs impossible. These close that gap.
+  /admin/policies:
+    get:
+      tags: [Admin]
+      operationId: listPolicyDefinitions
+      parameters:
+      - in: query
+        name: status
+        schema:
+          $ref: '#/components/schemas/DefinitionStatus'
+      responses:
+        '200':
+          description: Policy definitions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PolicyDefinition'
+    post:
+      tags: [Admin]
+      operationId: createPolicyDefinition
+      description: Creates a new DRAFT version. Published versions are immutable.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PolicyDefinitionInput'
+      responses:
+        '201':
+          description: Draft policy version
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PolicyDefinition'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /admin/policies/{policyId}:
+    get:
+      tags: [Admin]
+      operationId: getPolicyDefinition
+      parameters:
+      - $ref: '#/components/parameters/PolicyId'
+      responses:
+        '200':
+          description: Policy definition
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PolicyDefinition'
+    patch:
+      tags: [Admin]
+      operationId: updatePolicyDefinition
+      description: Only a DRAFT version may be edited.
+      parameters:
+      - $ref: '#/components/parameters/PolicyId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PolicyDefinitionInput'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PolicyDefinition'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /admin/policies/{policyId}/publish:
+    post:
+      tags: [Admin]
+      operationId: publishPolicyDefinition
+      description: >-
+        Publishes the draft, making it immutable and effective from its
+        effectiveFrom. Emits policy.version_published.
+      parameters:
+      - $ref: '#/components/parameters/PolicyId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Published
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PolicyDefinition'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /admin/workflows:
+    get:
+      tags: [Admin]
+      operationId: listWorkflowDefinitions
+      parameters:
+      - in: query
+        name: status
+        schema:
+          $ref: '#/components/schemas/DefinitionStatus'
+      responses:
+        '200':
+          description: Workflow definitions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WorkflowDefinition'
+    post:
+      tags: [Admin]
+      operationId: createWorkflowDefinition
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkflowDefinitionInput'
+      responses:
+        '201':
+          description: Draft workflow version
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowDefinition'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /admin/workflows/{workflowId}:
+    get:
+      tags: [Admin]
+      operationId: getWorkflowDefinition
+      parameters:
+      - $ref: '#/components/parameters/WorkflowId'
+      responses:
+        '200':
+          description: Workflow definition
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowDefinition'
+    patch:
+      tags: [Admin]
+      operationId: updateWorkflowDefinition
+      parameters:
+      - $ref: '#/components/parameters/WorkflowId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkflowDefinitionInput'
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowDefinition'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /admin/workflows/{workflowId}/publish:
+    post:
+      tags: [Admin]
+      operationId: publishWorkflowDefinition
+      parameters:
+      - $ref: '#/components/parameters/WorkflowId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Published
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkflowDefinition'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /admin/jobs:
+    get:
+      tags: [Admin]
+      operationId: listJobs
+      description: >-
+        Operational view of the background queue. Defaults to dead-lettered
+        jobs, which design/11 §8 requires an Admin to be able to find and retry.
+      parameters:
+      - in: query
+        name: status
+        schema:
+          $ref: '#/components/schemas/JobStatus'
+      - in: query
+        name: type
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Jobs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Job'
+  /admin/jobs/{jobId}/retry:
+    post:
+      tags: [Admin]
+      operationId: retryJob
+      description: >-
+        Requeues a dead-lettered job, resetting attempts and clearing the lease.
+        Integration events are never silently dropped (design/11 §8).
+      parameters:
+      - $ref: '#/components/parameters/JobId'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Requeued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Job'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /admin/master/{collection}:
+    get:
+      tags: [Admin]
+      operationId: listMasterData
+      description: >-
+        Master data is maintained manually from the backend (design/11 §2, §3) —
+        there is no HR or client-directory integration in scope.
+      parameters:
+      - $ref: '#/components/parameters/MasterCollection'
+      responses:
+        '200':
+          description: Records
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: object
+                  additionalProperties: true
+    post:
+      tags: [Admin]
+      operationId: createMasterDataRecord
+      parameters:
+      - $ref: '#/components/parameters/MasterCollection'
+      - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /admin/master/{collection}/{recordId}:
+    patch:
+      tags: [Admin]
+      operationId: updateMasterDataRecord
+      parameters:
+      - $ref: '#/components/parameters/MasterCollection'
+      - in: path
+        name: recordId
+        required: true
+        schema:
+          type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          description: Updated
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+        '409':
+          $ref: '#/components/responses/Conflict'
 components:
   securitySchemes:
     bearerAuth:
@@ -567,6 +1037,35 @@ components:
       required: true
       schema:
         type: string
+    PolicyId:
+      in: path
+      name: policyId
+      required: true
+      schema:
+        type: string
+    WorkflowId:
+      in: path
+      name: workflowId
+      required: true
+      schema:
+        type: string
+    JobId:
+      in: path
+      name: jobId
+      required: true
+      schema:
+        type: string
+    MasterCollection:
+      in: path
+      name: collection
+      required: true
+      schema:
+        enum:
+        - employees
+        - clients
+        - engagements
+        - expenseCategories
+        - roles
   responses:
     Conflict:
       description: State/version conflict
@@ -580,7 +1079,73 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/Error'
+    Unauthorized:
+      description: Missing, expired or invalid credentials
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    Forbidden:
+      description: >-
+        Authenticated but not permitted. Covers segregation-of-duties refusals
+        (design/07-permission-matrix.md §4) as well as missing permissions.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+    RateLimited:
+      description: Too many requests
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
   schemas:
+    MobileNumber:
+      type: string
+      description: >-
+        Indian mobile number, with or without the +91 prefix. Mobile number maps
+        to exactly one active employee (design/11-integration-spec.md §2).
+      pattern: '^(\+91)?[6-9][0-9]{9}$'
+    TokenPair:
+      type: object
+      required:
+      - accessToken
+      - refreshToken
+      - expiresIn
+      - employee
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+          description: >-
+            Single-use. Rotates on every refresh and is stored hashed so it can
+            be revoked before expiry.
+        expiresIn:
+          type: integer
+          description: Access token lifetime in seconds.
+        employee:
+          $ref: '#/components/schemas/Employee'
+    HealthReport:
+      type: object
+      required:
+      - status
+      - role
+      - version
+      - uptimeSec
+      properties:
+        status:
+          enum: [ok, degraded, down]
+        role:
+          type: string
+        version:
+          type: string
+        uptimeSec:
+          type: integer
+        checks:
+          type: object
+          additionalProperties:
+            enum: [ok, degraded, down, skipped]
     Employee:
       type: object
       required:
@@ -721,19 +1286,140 @@ components:
             - BLOCKED
           version:
             type: integer
-    PolicyEvaluation:
+    ExpenseUpdate:
+      allOf:
+      - $ref: '#/components/schemas/ExpenseInput'
+      - type: object
+        required:
+        - version
+        properties:
+          version:
+            type: integer
+            minimum: 0
+            description: Optimistic concurrency token from the last read.
+    PolicyOutcome:
+      enum:
+      - PASS
+      - WARNING
+      - EXCEPTION_REQUIRES_JUSTIFICATION
+      - BLOCKED
+    PolicyRuleResult:
       type: object
+      description: One matched policy rule and what it produced.
+      required:
+      - policyCode
+      - policyVersion
+      - outcome
       properties:
-        overallOutcome:
-          enum:
-          - PASS
-          - WARNING
-          - EXCEPTION_REQUIRES_JUSTIFICATION
-          - BLOCKED
-        results:
+        policyCode:
+          type: string
+        policyVersion:
+          type: integer
+        policyDefinitionId:
+          type: string
+        outcome:
+          $ref: '#/components/schemas/PolicyOutcome'
+        actions:
           type: array
           items:
             type: object
+            required:
+            - type
+            properties:
+              type:
+                enum:
+                - ALLOW
+                - BLOCK
+                - WARN
+                - REQUIRE_RECEIPT
+                - LIMIT
+                - REQUIRE_JUSTIFICATION
+                - MARK_EXCEPTION
+                - ADD_APPROVAL_STAGE
+                - SET_MILEAGE_RATE
+              on:
+                description: >-
+                  When the action fires. ALWAYS by default; EXCEED means only
+                  when a LIMIT on the same rule was breached. This reconciles
+                  design/09 §5's action list with the §2 example's
+                  REQUIRE_JUSTIFICATION_ON_EXCEED spelling.
+                enum: [ALWAYS, EXCEED]
+              basis:
+                type: string
+              amountPaise:
+                type: integer
+              resolver:
+                type: string
+              message:
+                type: string
+        limitPaise:
+          type: integer
+          description: The applicable limit, when the rule set one.
+        overagePaise:
+          type: integer
+          description: amountPaise minus limitPaise, when positive.
+        message:
+          type: string
+    PolicyEvaluation:
+      type: object
+      required:
+      - overallOutcome
+      properties:
+        id:
+          type: string
+        expenseId:
+          type: string
+        evaluatedAt:
+          type: string
+          format: date-time
+        overallOutcome:
+          $ref: '#/components/schemas/PolicyOutcome'
+        policyVersionIds:
+          type: array
+          items:
+            type: string
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/PolicyRuleResult'
+        requiresJustification:
+          type: boolean
+        addedApprovalStages:
+          type: array
+          items:
+            type: string
+    DuplicateCase:
+      type: object
+      required:
+      - id
+      - expenseId
+      - candidateExpenseId
+      - score
+      - status
+      properties:
+        id:
+          type: string
+        expenseId:
+          type: string
+        candidateExpenseId:
+          type: string
+        score:
+          type: number
+        reasons:
+          type: array
+          items:
+            type: string
+        status:
+          enum: [OPEN, RESOLVED]
+        resolution:
+          enum: [DISCARD, KEEP]
+        resolutionReason:
+          type: string
+        resolvedBy:
+          type: string
+        resolvedAt:
+          type: string
+          format: date-time
     Claim:
       type: object
       required:
@@ -803,6 +1489,338 @@ components:
           format: date-time
         version:
           type: integer
+    FinanceVerifyInput:
+      type: object
+      description: >-
+        Accounting fields Finance may maintain (requirements/03-FRD.md FR-FIN-003).
+        `reimbursablePaise` is what actually gets paid and may differ from the
+        claimed amount, which is why the payment amount is taken from the review
+        rather than from the claim.
+      properties:
+        notes:
+          type: string
+        glAssignments:
+          type: array
+          items:
+            type: object
+            required:
+            - expenseId
+            properties:
+              expenseId:
+                type: string
+              glCode:
+                type: string
+              costCentreId:
+                type: string
+              taxCode:
+                type: string
+              reimbursablePaise:
+                type: integer
+                minimum: 0
+        gstReview:
+          type: object
+          additionalProperties: true
+    PaymentBatch:
+      type: object
+      required:
+      - id
+      - batchNo
+      - status
+      - claimIds
+      - totalPaise
+      properties:
+        id:
+          type: string
+        batchNo:
+          type: string
+        status:
+          enum: [OPEN, PROCESSING, COMPLETED, FAILED]
+        claimIds:
+          type: array
+          items:
+            type: string
+        totalPaise:
+          type: integer
+        paymentMethod:
+          type: string
+        externalBatchId:
+          type: string
+        createdBy:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        processedAt:
+          type: string
+          format: date-time
+    Payment:
+      type: object
+      required:
+      - id
+      - claimId
+      - amountPaise
+      - status
+      properties:
+        id:
+          type: string
+        claimId:
+          type: string
+        paymentBatchId:
+          type: string
+        amountPaise:
+          type: integer
+        status:
+          enum: [PENDING, PROCESSING, PAID, FAILED]
+        reference:
+          type: string
+        paidAt:
+          type: string
+          format: date-time
+        failureCode:
+          type: string
+        failureMessage:
+          type: string
+    Notification:
+      type: object
+      required:
+      - id
+      - type
+      - title
+      - createdAt
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        title:
+          type: string
+        body:
+          type: string
+        entityType:
+          type: string
+        entityId:
+          type: string
+        channels:
+          type: array
+          items:
+            enum: [PUSH]
+          description: >-
+            Push is the only channel in the current scope (gaps.md GAP-008).
+        readAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+    DefinitionStatus:
+      enum: [DRAFT, PUBLISHED, ARCHIVED]
+    PolicyCondition:
+      type: object
+      required:
+      - all
+      properties:
+        all:
+          type: array
+          items:
+            type: object
+            required:
+            - field
+            - op
+            properties:
+              field:
+                type: string
+                description: Dot path into the evaluation context, e.g. category.code
+              op:
+                enum:
+                - EQ
+                - NE
+                - IN
+                - NOT_IN
+                - GT
+                - GTE
+                - LT
+                - LTE
+                - EXISTS
+                - BETWEEN
+              value: {}
+    PolicyDefinitionInput:
+      type: object
+      required:
+      - policyCode
+      - name
+      - priority
+      - effectiveFrom
+      - conditions
+      - actions
+      properties:
+        policyCode:
+          type: string
+        name:
+          type: string
+        priority:
+          type: integer
+          description: Higher wins (design/09 §6 level 4).
+        effectiveFrom:
+          type: string
+          format: date-time
+        effectiveTo:
+          type: string
+          format: date-time
+        mandatoryControl:
+          type: boolean
+          description: >-
+            Marks a mandatory legal or firm control — precedence level 2, above
+            rule specificity and priority.
+        conditions:
+          $ref: '#/components/schemas/PolicyCondition'
+        actions:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            additionalProperties: true
+    PolicyDefinition:
+      allOf:
+      - $ref: '#/components/schemas/PolicyDefinitionInput'
+      - type: object
+        required:
+        - id
+        - version
+        - status
+        properties:
+          id:
+            type: string
+          version:
+            type: integer
+            description: >-
+              Published version number, NOT an optimistic-concurrency counter.
+          status:
+            $ref: '#/components/schemas/DefinitionStatus'
+          createdBy:
+            type: string
+          approvedBy:
+            type: string
+    WorkflowStage:
+      type: object
+      required:
+      - stageCode
+      - sequence
+      - approverResolver
+      properties:
+        stageCode:
+          type: string
+        sequence:
+          type: integer
+        approverResolver:
+          enum:
+          - REPORTING_MANAGER
+          - ENGAGEMENT_MANAGER
+          - ENGAGEMENT_PARTNER
+          - NAMED_ROLE
+          - NAMED_EMPLOYEE
+        resolverValue:
+          type: string
+          description: Role code or employee id, for NAMED_ROLE / NAMED_EMPLOYEE.
+        permission:
+          type: string
+        required:
+          type: boolean
+        slaHours:
+          type: integer
+          description: Out of scope in the current release (design/08 §8).
+        escalation:
+          type: object
+          additionalProperties: true
+        allowDelegation:
+          type: boolean
+          description: Out of scope in the current release (design/08 §9).
+        decisionOptions:
+          type: array
+          items:
+            enum: [APPROVE, RETURN, REJECT]
+    WorkflowDefinitionInput:
+      type: object
+      required:
+      - workflowCode
+      - name
+      - priority
+      - effectiveFrom
+      - stages
+      properties:
+        workflowCode:
+          type: string
+        name:
+          type: string
+        priority:
+          type: integer
+        effectiveFrom:
+          type: string
+          format: date-time
+        effectiveTo:
+          type: string
+          format: date-time
+        partnerApprovalThresholdPaise:
+          type: integer
+          description: >-
+            The ₹25,000 baseline from design/08 §3, which the spec requires to be
+            configurable. Lives on the definition so workflowSnapshot captures
+            the value that was actually in force at submission.
+        conditions:
+          $ref: '#/components/schemas/PolicyCondition'
+        stages:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/WorkflowStage'
+    WorkflowDefinition:
+      allOf:
+      - $ref: '#/components/schemas/WorkflowDefinitionInput'
+      - type: object
+        required:
+        - id
+        - version
+        - status
+        properties:
+          id:
+            type: string
+          version:
+            type: integer
+            description: Published version number, NOT a concurrency counter.
+          status:
+            $ref: '#/components/schemas/DefinitionStatus'
+    JobStatus:
+      enum: [PENDING, RUNNING, COMPLETED, FAILED, DEAD_LETTER]
+    Job:
+      type: object
+      required:
+      - id
+      - type
+      - status
+      - attempts
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+        status:
+          $ref: '#/components/schemas/JobStatus'
+        attempts:
+          type: integer
+        maxAttempts:
+          type: integer
+        availableAt:
+          type: string
+          format: date-time
+        lockedAt:
+          type: string
+          format: date-time
+        lastError:
+          type: string
+        correlationId:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
     Error:
       type: object
       required:

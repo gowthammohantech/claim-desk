@@ -11,6 +11,9 @@ export const ErrorCode = {
   NOT_FOUND: 'NOT_FOUND',
   IDEMPOTENCY_KEY_REQUIRED: 'IDEMPOTENCY_KEY_REQUIRED',
   IDEMPOTENCY_KEY_REUSED: 'IDEMPOTENCY_KEY_REUSED',
+  /** An identical request is still in flight; the client should retry shortly. */
+  IDEMPOTENCY_IN_PROGRESS: 'IDEMPOTENCY_IN_PROGRESS',
+  WORKFLOW_UNRESOLVED: 'WORKFLOW_UNRESOLVED',
   RATE_LIMITED: 'RATE_LIMITED',
 
   // 409 — optimistic concurrency and state

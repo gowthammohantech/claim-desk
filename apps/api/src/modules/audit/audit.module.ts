@@ -1,15 +1,16 @@
+import { writeAuditEvents } from './infrastructure/auditWriter.js';
+
 /**
- * Audit module composition root.
+ * Audit module.
  *
- * Builds the concrete adapters, injects them into the use cases, and exposes
- * the router plus any job handlers the module contributes.
+ * Owns the `auditEvents` collection. Its writer is handed to the unit of work
+ * at composition time rather than imported by every module — coupling twelve
+ * modules to audit at build time would make every fake miserable.
  */
-export interface AuditModuleDeps {
-  // TODO: inject the logger, config and repositories this module needs.
-  _placeholder?: never;
+export interface AuditModule {
+  writeAuditEvents: typeof writeAuditEvents;
 }
 
-export function buildAuditModule(_deps: AuditModuleDeps = {}): Record<string, never> {
-  // TODO: return { router, jobHandlers, subscribers }.
-  return {};
+export function buildAuditModule(): AuditModule {
+  return { writeAuditEvents };
 }
