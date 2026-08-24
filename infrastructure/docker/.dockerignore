@@ -1,0 +1,14 @@
+**/node_modules
+**/dist
+**/build
+**/coverage
+**/.turbo
+**/.expo
+**/*.log
+.git
+apps/mobile
+apps/web
+requirements
+reference
+design/*.md
+design/ADRs

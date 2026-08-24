@@ -1,0 +1,38 @@
+@import 'tailwindcss';
+
+/* "Clear Ledger" tokens. Generated from packages/tokens/src/*.ts — the same
+   source that produces the React Native theme, so web and mobile cannot drift. */
+@import '@claimdesk/tokens/tailwind';
+@import '@claimdesk/tokens/css';
+
+@layer base {
+  html {
+    font-family: var(--cd-font-ui);
+  }
+
+  body {
+    background: var(--cd-paper);
+    color: var(--cd-ink);
+    font-size: var(--cd-fs-body);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Money and figures align in columns. */
+  .num {
+    font-variant-numeric: tabular-nums;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--cd-focus-ring);
+    outline-offset: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -1,0 +1,143 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Turbo's own telemetry adds latency and tells us nothing.
+  DO_NOT_TRACK: '1'
+
+jobs:
+  verify:
+    name: Lint, typecheck, test, build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      # Version drift across the workspace: catalogued deps pinned literally,
+      # duplicate copies of a runtime singleton, or an app importing an app.
+      - name: Verify workspace
+        run: pnpm verify:workspace
+
+      # The OpenAPI spec is the source of truth for @claimdesk/contracts. A
+      # malformed spec generates valid-but-wrong TypeScript silently, so lint it
+      # BEFORE codegen runs.
+      - name: Lint the OpenAPI contract
+        run: pnpm openapi:lint
+
+      # Regenerate contracts and design tokens, then fail if the committed
+      # output differs. Without this, a spec or token edit that skips the
+      # rebuild ships stale types and nobody notices.
+      - name: Check generated output is up to date
+        run: pnpm codegen:check
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      # Includes apps/api/src/boundaries.test.ts, which proves the architecture
+      # rules actually reject violations. eslint-plugin-boundaries fails SILENTLY
+      # when it cannot resolve an import, so a green `pnpm lint` alone is not
+      # evidence that the layering is enforced.
+      - name: Test
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
+
+  integration:
+    name: Integration (Mongo replica set + Azurite)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    # Integration tests need real infrastructure, so keep them off the fast path.
+    needs: verify
+
+    steps:
+      - uses: actions/checkout@v5
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      # A single-node REPLICA SET, not a standalone mongod: claim submission
+      # commits the claim transition and the first approval task in one
+      # transaction (design/08-workflow-spec.md), and Mongo transactions do not
+      # exist without a replica set.
+      - name: Start dependencies
+        run: pnpm infra:up
+
+      - name: Wait for MongoDB to elect a primary
+        run: |
+          for i in $(seq 1 30); do
+            if docker exec claimdesk-mongo mongosh --quiet --eval 'db.hello().isWritablePrimary' | grep -q true; then
+              echo "replica set ready"; exit 0
+            fi
+            sleep 2
+          done
+          echo "MongoDB did not become writable in time"; exit 1
+
+      - name: Integration tests
+        run: pnpm test:integration
+        env:
+          MONGODB_URI: mongodb://localhost:27017/claimdesk_test?replicaSet=rs0&directConnection=true
+          AZURE_STORAGE_CONNECTION_STRING: UseDevelopmentStorage=true
+
+      - name: Stop dependencies
+        if: always()
+        run: pnpm infra:down
+
+  security:
+    name: Security scans
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      security-events: write
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Secret scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      # Financial data plus receipt storage: a high-severity advisory is a
+      # release blocker, not a warning.
+      - name: Dependency audit
+        run: pnpm audit --audit-level high

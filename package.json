@@ -1,0 +1,45 @@
+{
+  "name": "claimdesk",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ClaimDesk — employee reimbursement claim platform (API + Finance/Admin web + Employee/Approver mobile)",
+  "packageManager": "pnpm@11.14.0",
+  "engines": {
+    "node": ">=22.12.0",
+    "pnpm": ">=10.0.0"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "dev:api": "pnpm --filter @claimdesk/api dev",
+    "dev:worker": "pnpm --filter @claimdesk/api dev:worker",
+    "dev:web": "turbo run dev --filter=@claimdesk/web",
+    "dev:mobile": "turbo run dev --filter=@claimdesk/mobile",
+    "lint": "turbo run lint",
+    "lint:fix": "turbo run lint -- --fix",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:integration": "turbo run test:integration",
+    "test:e2e": "turbo run test:e2e",
+    "codegen": "turbo run codegen",
+    "codegen:check": "pnpm codegen && git diff --exit-code -- packages/contracts/src/generated.ts packages/tokens/dist",
+    "openapi:lint": "redocly lint design/06-api-contract.yaml",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "verify:workspace": "node tools/verify-workspace.mjs",
+    "infra:up": "docker compose -f infrastructure/docker/compose.dev.yml up -d",
+    "infra:down": "docker compose -f infrastructure/docker/compose.dev.yml down -v",
+    "db:migrate": "pnpm --filter @claimdesk/api migrate",
+    "clean": "turbo run clean"
+  },
+  "devDependencies": {
+    "@claimdesk/config-eslint": "workspace:*",
+    "@claimdesk/config-ts": "workspace:*",
+    "@redocly/cli": "^2.47.0",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
+    "turbo": "^2.10.11",
+    "typescript": "catalog:"
+  },
+  "type": "module"
+}

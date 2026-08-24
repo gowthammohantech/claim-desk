@@ -1,0 +1,27 @@
+{
+  "name": "@claimdesk/config-eslint",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "files": ["*.js"],
+  "exports": {
+    "./base": "./base.js",
+    "./node": "./node.js",
+    "./react": "./react.js",
+    "./react-native": "./react-native.js",
+    "./api-boundaries": "./api-boundaries.js",
+    "./isomorphic": "./isomorphic.js"
+  },
+  "dependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint-plugin-boundaries": "catalog:",
+    "eslint-plugin-import-x": "catalog:",
+    "eslint-import-resolver-typescript": "^4.4.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "globals": "^17.11.0",
+    "typescript-eslint": "catalog:"
+  },
+  "peerDependencies": {
+    "eslint": "catalog:"
+  }
+}

@@ -1,0 +1,47 @@
+{
+  "name": "@claimdesk/api-client",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./react": {
+      "types": "./dist/react/index.d.ts",
+      "import": "./dist/react/index.js",
+      "require": "./dist/react/index.cjs"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsup",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "clean": "rimraf dist .turbo"
+  },
+  "dependencies": {
+    "@claimdesk/contracts": "workspace:*",
+    "openapi-fetch": "catalog:"
+  },
+  "peerDependencies": {
+    "@tanstack/react-query": "catalog:"
+  },
+  "peerDependenciesMeta": {
+    "@tanstack/react-query": { "optional": true }
+  },
+  "devDependencies": {
+    "@claimdesk/config-eslint": "workspace:*",
+    "@claimdesk/config-ts": "workspace:*",
+    "@tanstack/react-query": "catalog:",
+    "eslint": "catalog:",
+    "rimraf": "catalog:",
+    "tsup": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

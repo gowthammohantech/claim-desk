@@ -1,0 +1,30 @@
+node_modules/
+dist/
+build/
+coverage/
+.turbo/
+*.tsbuildinfo
+
+.env
+.env.*
+!.env.example
+
+# Expo
+.expo/
+.expo-shared/
+apps/mobile/ios/
+apps/mobile/android/
+
+# Test output
+playwright-report/
+test-results/
+blob-report/
+
+# Editors / OS
+.DS_Store
+Thumbs.db
+*.log
+
+# Generated but COMMITTED (drift-checked in CI) — keep tracked
+!packages/contracts/src/generated.ts
+!packages/tokens/dist/

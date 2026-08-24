@@ -1,0 +1,43 @@
+packages:
+  - 'apps/*'
+  - 'packages/*'
+
+# Native postinstall scripts we explicitly trust (pnpm blocks all others).
+allowBuilds:
+  unrs-resolver: true
+  esbuild: true
+
+# Single source of truth for versions that MUST match across packages.
+# `catalog:` in a package.json resolves to the entry below.
+# tools/verify-workspace.mjs fails CI if a catalogued name is pinned literally.
+catalog:
+  # language / build
+  typescript: ~6.0.3
+  tsup: ^8.5.1
+  tsx: ^4.23.12
+  vitest: ^4.1.11
+  '@vitest/coverage-v8': ^4.1.11
+  rimraf: ^6.0.1
+  '@types/node': ^24.10.1
+  cross-env: ^10.1.0
+
+  # lint / format
+  eslint: ^10.9.0
+  typescript-eslint: ^8.67.0
+  eslint-plugin-boundaries: ^7.2.0
+  eslint-plugin-import-x: ^4.17.1
+  prettier: ^3.6.2
+
+  # shared runtime — MUST be identical across api, web and mobile
+  zod: ^4.4.3
+  '@tanstack/react-query': ^5.102.2
+  openapi-fetch: ^0.17.0
+  openapi-typescript: ^7.13.0
+
+  # react — pinned to what the Expo SDK ships; web follows mobile
+  react: 19.2.3
+  '@types/react': ~19.2.0
+
+minimumReleaseAgeExclude:
+  - '@tanstack/query-core@5.102.2'
+  - '@tanstack/react-query@5.102.2'

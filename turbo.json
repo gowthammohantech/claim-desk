@@ -1,0 +1,52 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "ui": "stream",
+  "globalDependencies": [
+    ".npmrc",
+    "tsconfig.base.json",
+    "packages/config-ts/*.json",
+    "design/06-api-contract.yaml",
+    "reference/ClaimDesk_Mobile_v2.html"
+  ],
+  "globalEnv": ["NODE_ENV", "CI"],
+  "globalPassThroughEnv": ["EXPO_TOKEN", "TURBO_TOKEN"],
+  "tasks": {
+    "codegen": {
+      "outputs": ["src/generated.ts", "dist/*.css"]
+    },
+    "build": {
+      "dependsOn": ["^build", "codegen"],
+      "inputs": ["$TURBO_DEFAULT$", "!**/*.test.*", "!**/*.spec.*", "!e2e/**"],
+      "outputs": ["dist/**", "build/**"],
+      "env": ["VITE_API_BASE_URL"]
+    },
+    "typecheck": {
+      "dependsOn": ["^build", "codegen"],
+      "outputs": []
+    },
+    "lint": {
+      "dependsOn": ["^build", "codegen"],
+      "outputs": []
+    },
+    "test": {
+      "dependsOn": ["^build"],
+      "outputs": []
+    },
+    "test:integration": {
+      "dependsOn": ["^build"],
+      "cache": false
+    },
+    "test:e2e": {
+      "dependsOn": ["build"],
+      "cache": false
+    },
+    "dev": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "persistent": true
+    },
+    "clean": {
+      "cache": false
+    }
+  }
+}

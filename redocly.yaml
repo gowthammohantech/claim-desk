@@ -1,0 +1,43 @@
+apis:
+  claimdesk:
+    root: design/06-api-contract.yaml
+
+extends:
+  - recommended
+
+rules:
+  # ── Structural validity: always an error ────────────────────────────────────
+  # These are what the CI gate exists for. openapi-typescript will happily
+  # generate valid-but-wrong TypeScript from a malformed spec, so a structural
+  # break has to fail the build.
+  spec: error
+  spec-strict-refs: error
+  no-invalid-media-type-examples: error
+  no-unresolved-refs: error
+  operation-operationId: error
+  operation-operationId-unique: error
+  path-params-defined: error
+  no-identical-paths: error
+  no-ambiguous-paths: error
+
+  # ── Documentation polish: warn, with a reason ──────────────────────────────
+  # The contract was authored as an implementation baseline and carries no
+  # per-operation summaries or descriptions (27 operations). That is worth
+  # fixing before the spec is published to consumers, but it does not affect
+  # generated types or runtime behaviour, so it must not block the build today.
+  operation-summary: warn
+  operation-description: warn
+  tag-description: warn
+
+  # Error responses ARE defined via shared `Conflict` and `ValidationError`
+  # components; the rule does not follow those into every operation.
+  operation-4xx-response: warn
+
+  # Internal firm API — no public licence, and the server URL is a documented
+  # placeholder until the real host is provisioned.
+  info-license: off
+  no-server-example.com: warn
+
+  # Security is declared globally as `bearerAuth`, with `security: []` on the
+  # two OTP endpoints. That is intentional, not an omission.
+  security-defined: error

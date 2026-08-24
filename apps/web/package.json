@@ -1,0 +1,47 @@
+{
+  "name": "@claimdesk/web",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "ui:add": "pnpm dlx shadcn@latest add",
+    "clean": "rimraf dist .turbo"
+  },
+  "dependencies": {
+    "@claimdesk/api-client": "workspace:*",
+    "@claimdesk/contracts": "workspace:*",
+    "@claimdesk/domain": "workspace:*",
+    "@claimdesk/tokens": "workspace:*",
+    "@tanstack/react-query": "catalog:",
+    "@tanstack/react-table": "^9.1.2",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^1.33.0",
+    "react": "catalog:",
+    "react-dom": "19.2.3",
+    "react-router": "^8.3.0",
+    "tailwind-merge": "^3.6.0"
+  },
+  "devDependencies": {
+    "@claimdesk/config-eslint": "workspace:*",
+    "@claimdesk/config-ts": "workspace:*",
+    "@tailwindcss/vite": "^4.3.3",
+    "@testing-library/react": "^16.3.2",
+    "@types/react": "catalog:",
+    "@types/react-dom": "^19.2.4",
+    "@vitejs/plugin-react": "^6.1.0",
+    "eslint": "catalog:",
+    "jsdom": "^30.0.1",
+    "rimraf": "catalog:",
+    "tailwindcss": "^4.3.3",
+    "typescript": "catalog:",
+    "vite": "^8.2.2",
+    "vitest": "catalog:"
+  }
+}

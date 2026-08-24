@@ -1,0 +1,5 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "//": "Source of truth lives in packages/config-ts/base.json so the options survive being consumed from node_modules. This file exists for editors and tools that look for a root tsconfig.",
+  "extends": "@claimdesk/config-ts/base.json"
+}

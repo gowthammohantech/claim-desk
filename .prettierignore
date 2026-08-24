@@ -1,0 +1,11 @@
+node_modules
+dist
+build
+coverage
+.turbo
+pnpm-lock.yaml
+packages/contracts/src/generated.ts
+packages/tokens/dist
+design
+requirements
+reference

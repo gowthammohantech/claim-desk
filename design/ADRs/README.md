@@ -12,3 +12,4 @@
   ADR-008   Policy/workflow snapshots on submission
   ADR-009   Transactional Mongo outbox/jobs
   ADR-010   Integer minor units for money
+  ADR-011   Repo layout and tooling (diverges from TDD 7)

@@ -1,0 +1,41 @@
+{
+  "name": "@claimdesk/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./openapi": {
+      "types": "./dist/generated.d.ts",
+      "import": "./dist/generated.js",
+      "require": "./dist/generated.cjs"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "codegen": "openapi-typescript ../../design/06-api-contract.yaml -o src/generated.ts --root-types --alphabetize",
+    "build": "tsup",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "clean": "rimraf dist .turbo"
+  },
+  "devDependencies": {
+    "@claimdesk/config-eslint": "workspace:*",
+    "@claimdesk/config-ts": "workspace:*",
+    "eslint": "catalog:",
+    "openapi-typescript": "catalog:",
+    "rimraf": "catalog:",
+    "tsup": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

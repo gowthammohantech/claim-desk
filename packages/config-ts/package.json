@@ -1,0 +1,13 @@
+{
+  "name": "@claimdesk/config-ts",
+  "version": "0.1.0",
+  "private": true,
+  "files": ["*.json"],
+  "exports": {
+    "./base.json": "./base.json",
+    "./node.json": "./node.json",
+    "./react-library.json": "./react-library.json",
+    "./vite.json": "./vite.json",
+    "./expo.json": "./expo.json"
+  }
+}

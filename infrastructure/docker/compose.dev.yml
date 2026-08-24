@@ -1,0 +1,42 @@
+name: claimdesk-dev
+
+services:
+  # MongoDB as a SINGLE-NODE REPLICA SET, not a standalone mongod.
+  #
+  # This is not optional. design/08-workflow-spec.md commits the claim
+  # transition and the first approval task in one transaction, and ADR-009
+  # requires the outbox row to commit with the business mutation. MongoDB
+  # transactions do not exist without a replica set, so a standalone container
+  # would let code pass locally and fail in every other environment.
+  mongo:
+    image: mongo:8
+    container_name: claimdesk-mongo
+    command: ['--replSet', 'rs0', '--bind_ip_all']
+    ports:
+      - '27017:27017'
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: |
+        mongosh --quiet --eval "
+          try { rs.status().ok }
+          catch (e) { rs.initiate({_id:'rs0',members:[{_id:0,host:'localhost:27017'}]}).ok }
+        "
+      interval: 5s
+      timeout: 10s
+      retries: 20
+      start_period: 10s
+
+  # Azure Blob emulator for receipt uploads (ADR-005).
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite:latest
+    container_name: claimdesk-azurite
+    command: ['azurite-blob', '--blobHost', '0.0.0.0', '--location', '/data']
+    ports:
+      - '10000:10000'
+    volumes:
+      - azurite-data:/data
+
+volumes:
+  mongo-data:
+  azurite-data:

@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2023"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "moduleDetection": "force",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+
+    /* Bans TS `enum` and parameter properties. Deliberate: it keeps
+       @claimdesk/contracts safe for Hermes, Metro, esbuild and Node
+       type-stripping. Use `as const` objects for enums instead. */
+    "erasableSyntaxOnly": true,
+
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true,
+    "exactOptionalPropertyTypes": true,
+    "forceConsistentCasingInFileNames": true,
+
+    /* TS 6 deprecates `baseUrl`. We do not set one, but tsup's DTS build
+       synthesizes it, so the deprecation has to be acknowledged here. */
+    "ignoreDeprecations": "6.0",
+
+    "skipLibCheck": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true
+  },
+  "exclude": ["node_modules", "dist", "build", ".turbo"]
+}

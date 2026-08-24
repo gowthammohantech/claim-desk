@@ -1,0 +1,49 @@
+{
+  "name": "@claimdesk/tokens",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./native": {
+      "types": "./dist/native.d.ts",
+      "import": "./dist/native.js",
+      "require": "./dist/native.cjs"
+    },
+    "./semantic": {
+      "types": "./dist/semantic.d.ts",
+      "import": "./dist/semantic.js",
+      "require": "./dist/semantic.cjs"
+    },
+    "./css": "./dist/tokens.css",
+    "./tailwind": "./dist/tailwind.css"
+  },
+  "files": ["dist"],
+  "scripts": {
+    "codegen": "tsx scripts/build-css.ts",
+    "build": "tsup",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "clean": "rimraf dist .turbo"
+  },
+  "dependencies": {
+    "@claimdesk/contracts": "workspace:*"
+  },
+  "devDependencies": {
+    "@claimdesk/config-eslint": "workspace:*",
+    "@claimdesk/config-ts": "workspace:*",
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "rimraf": "catalog:",
+    "tsup": "catalog:",
+    "tsx": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

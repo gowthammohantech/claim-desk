@@ -1,0 +1,50 @@
+{
+  "name": "@claimdesk/mobile",
+  "version": "0.1.0",
+  "private": true,
+  "main": "expo-router/entry",
+  "scripts": {
+    "dev": "expo start",
+    "dev:clear": "expo start --clear",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run --passWithNoTests",
+    "doctor": "npx expo-doctor",
+    "deps:check": "npx expo install --check",
+    "clean": "rimraf .expo dist .turbo"
+  },
+  "dependencies": {
+    "@claimdesk/api-client": "workspace:*",
+    "@claimdesk/contracts": "workspace:*",
+    "@claimdesk/domain": "workspace:*",
+    "@claimdesk/tokens": "workspace:*",
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "@tanstack/react-query": "catalog:",
+    "expo": "^57.0.15",
+    "expo-constants": "~57.0.13",
+    "expo-image-picker": "~57.0.12",
+    "expo-linear-gradient": "~57.0.1",
+    "expo-linking": "~57.0.7",
+    "expo-notifications": "~57.0.13",
+    "expo-router": "~57.0.15",
+    "expo-secure-store": "~57.0.1",
+    "expo-splash-screen": "~57.0.7",
+    "expo-status-bar": "~57.0.1",
+    "react": "catalog:",
+    "react-dom": "19.2.3",
+    "react-native": "0.86.2",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-screens": "~4.26.2"
+  },
+  "devDependencies": {
+    "@claimdesk/config-eslint": "workspace:*",
+    "@claimdesk/config-ts": "workspace:*",
+    "@types/react": "catalog:",
+    "eslint": "catalog:",
+    "rimraf": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}
